@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Muay Thai Clicker - Montphu Factory Team B</title>
+<style>
+:root{--bg:#0d0d0d;--card:#1a1a1a;--gold:#ffcc00;--red:#e63946;--cyan:#00e5ff;--green:#06d6a0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:radial-gradient(600px 400px at 70% -10%, #2a1a00 0%, #0d0d0d 60%);color:#fff;overflow-x:hidden;user-select:none;touch-action:manipulation}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:rgba(0,0,0,.7);border-bottom:2px solid var(--gold);position:sticky;top:0;z-index:10;backdrop-filter:blur(8px)}
+h1{font-size:18px;letter-spacing:.5px;line-height:1}
+h1 span{color:var(--gold)}
+.top-stats{display:flex;gap:10px;font-size:12px}
+.stat{background:#222;border:1px solid #333;border-radius:999px;padding:4px 10px}
+.stat b{color:var(--gold)}
+.wrap{max-width:1080px;margin:0 auto;display:grid;grid-template-columns:1.2fr .8fr;gap:12px;padding:12px}
+@media(max-width:820px){.wrap{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid #2a2a2a;border-radius:16px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+.arena{position:relative;display:flex;flex-direction:column;align-items:center;padding:14px 10px 10px;min-height:520px}
+.ring-bg{position:absolute;inset:0;background:
+radial-gradient(400px 120px at 50% 78%, rgba(255,204,0,.18) 0%, transparent 60%),
+linear-gradient(to bottom, transparent 62%, #111 62%, #1e1e1e 100%);pointer-events:none}
+.fighter-zone{position:relative;z-index:1;margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:6px}
+.bag-wrap{position:relative;width:210px;height:300px;display:grid;place-items:center;cursor:pointer}
+.punch-bag{width:92px;height:160px;background:linear-gradient(#8b4513,#5a2a0a);border-radius:40px 40px 18px 18px;border:4px solid #2b1606;box-shadow:inset 0 10px 0 rgba(255,255,255,.15),0 18px 0 rgba(0,0,0,.6);position:relative;transition:transform .06s}
+.punch-bag:after{content:'';position:absolute;top:-18px;left:50%;width:44px;height:18px;border:4px solid #aaa;border-bottom:0;border-radius:10px 10px 0 0;transform:translateX(-50%)}
+.bag-wrap:active .punch-bag,.bag-wrap.hit .punch-bag{transform:scale(.94) rotate(-3deg)}
+.fighter-emoji{font-size:86px;filter:drop-shadow(0 0 12px rgba(255,204,0,.5));transition:transform .08s}
+.fighter-zone.punch .fighter-emoji{transform:translateX(18px) scale(1.08)}
+.float{position:absolute;left:50%;top:30%;transform:translateX(-50%);font-weight:800;color:var(--gold);text-shadow:0 2px 0 #000;font-size:22px;pointer-events:none;animation:pop 0.7s ease forwards}
+@keyframes pop{0%{transform:translate(-50%,0) scale(.6);opacity:0}15%{opacity:1}100%{transform:translate(-50%,-90px) scale(1.3);opacity:0}}
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:800;cursor:pointer;letter-spacing:.3px}
+.btn-primary{background:linear-gradient(180deg,var(--gold),#e6a600);color:#000;box-shadow:0 4px 0 #8a5f00;width:100%}
+.btn-primary:active{transform:translateY(2px);box-shadow:0 2px 0 #8a5f00}
+.btn-ghost{background:#222;color:#fff;border:1px solid #333}
+.progress{height:10px;background:#111;border-radius:999px;overflow:hidden;border:1px solid #2a2a2a}
+.progress i{display:block;height:100%;background:linear-gradient(90deg,var(--red),var(--gold));width:0%;transition:width .3s}
+.panel{padding:12px}
+.panel h2{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;color:#aaa;margin-bottom:10px;display:flex;justify-content:space-between}
+.shop{display:flex;flex-direction:column;gap:8px;max-height:560px;overflow:auto;padding-right:2px}
+.item{display:grid;grid-template-columns:48px 1fr auto;gap:10px;align-items:center;background:#161616;border:1px solid #262626;border-radius:12px;padding:8px 10px;cursor:pointer;transition:.15s}
+.item:hover{border-color:var(--gold);transform:translateY(-1px)}
+.item.disabled{opacity:.45;pointer-events:none}
+.item-icon{width:48px;height:48px;border-radius:10px;display:grid;place-items:center;background:#0f0f0f;font-size:26px;border:1px solid #2a2a2a}
+.item-info b{font-size:13px;display:block}
+.item-info small{font-size:11px;color:#999}
+.price{font-weight:900;color:var(--gold);font-size:13px;white-space:nowrap}
+.price small{color:#666;font-weight:600;display:block;text-align:right}
+.belt-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.belt{padding:4px 8px;border-radius:999px;background:#111;border:1px solid #333;font-size:11px}
+.belt.won{background:linear-gradient(180deg,#ffd700,#b89600);color:#000;font-weight:800;border-color:#ffd700}
+.fight-bar{display:flex;gap:8px;margin-top:10px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.82);display:none;place-items:center;z-index:50;padding:16px}
+.modal.open{display:grid}
+.modal-card{width:min(440px,100%);background:#181818;border:2px solid var(--gold);border-radius:18px;padding:16px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.8)}
+.boss{font-size:80px;margin:8px 0;animation:bossBob 1s infinite alternate}
+@keyframes bossBob{to{transform:translateY(6px)}}
+.hp{height:16px;background:#2a0000;border-radius:999px;border:1px solid #500;overflow:hidden}
+.hp i{display:block;height:100%;background:linear-gradient(90deg,#ff2a2a,#ff8a00);transition:width .15s;width:100%}
+.wai{font-size:64px;animation:waiDance 1.2s infinite}
+@keyframes waiDance{0%{transform:rotate(-8deg) translateY(0)}50%{transform:rotate(8deg) translateY(-6px)}100%{transform:rotate(-8deg) translateY(0)}}
+.footer{margin-top:12px;padding:10px 12px;border-top:1px dashed #2a2a2a;display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;font-size:11px;color:#777}
+.footer a{color:var(--cyan);text-decoration:none}
+.ad{background:repeating-linear-gradient(45deg,#111,#111 10px,#161616 10px,#161616 20px);border:1px dashed #333;border-radius:12px;padding:10px;text-align:center;color:#666;font-size:11px;margin-top:10px}
+.kpi{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}
+.kpi div{background:#111;border:1px solid #222;border-radius:10px;padding:8px;text-align:center}
+.kpi b{display:block;color:var(--gold);font-size:14px}
+.kpi span{font-size:10px;color:#888;letter-spacing:.8px;text-transform:uppercase}
+</style>
+</head>
+<body>
+<header>
+<div><h1>🥊 MUAY THAI <span>CLICKER</span> <small style="font-weight:400;color:#aaa">Team B • 03</small></h1><div style="font-size:10px;color:#888;letter-spacing:.6px">SAWASDEE KRUB • CLICK TO TRAIN • WIN BELTS!</div></div>
+<div class="top-stats">
+<div class="stat">💰 <b id="money">0</b></div>
+<div class="stat">💥 <b id="ppc">1</b>/click</div>
+<div class="stat">🏆 <b id="belts">0</b>/7</div>
+</div>
+</header>
+
+<div class="wrap">
+<div class="card">
+<div class="arena">
+<div class="ring-bg"></div>
+<div class="fighter-zone" id="fighterZone">
+<div style="font-size:11px;letter-spacing:1px;color:var(--gold)">RAJADAMNERN STADIUM • BANGKOK</div>
+<div class="bag-wrap" id="clickArea">
+<div class="punch-bag" id="bag"></div>
+<div class="fighter-emoji" id="fighter">🦵</div>
+</div>
+<div style="display:flex;gap:8px;align-items:center">
+<span id="levelName" style="background:var(--gold);color:#000;font-weight:900;padding:4px 10px;border-radius:999px;font-size:12px">NAK MUAY NOOB</span>
+<span style="font-size:11px;color:#aaa" id="powerTxt">Power: 0</span>
+</div>
+<div class="progress" style="width:92%;margin-top:4px"><i id="xpBar"></i></div>
+<div style="width:92%" class="kpi">
+<div><b id="kClicks">0</b><span>TOTAL PUNCHES</span></div>
+<div><b id="kDps">0</b><span>GYM DPS</span></div>
+<div><b id="kMult">x1</b><span>MULTIPLIER</span></div>
+</div>
+<div class="fight-bar" style="width:92%">
+<button class="btn btn-primary" id="fightBtn">⚔️ FIGHT FOR BELT - <span id="fightCost">1K Power</span></button>
+<button class="btn btn-ghost" id="waiBtn">🙏 WAI KRU (+25% 15s)</button>
+</div>
+<div class="belt-row" id="beltRow"></div>
+</div>
+</div>
+<div class="panel">
+<div style="font-size:11px;color:#888;line-height:1.4">💡 <b style="color:#aaa">How to play:</b> Tap bag to punch. Earn 💰, buy upgrades. Gym auto-trains. Win belts to prestige. <i style="color:var(--gold)">Chok Dee!</i></div>
+</div>
+</div>
+
+<div class="card">
+<div class="panel">
+<h2>🥊 TRAINING UPGRADES <span id="shopHint" style="text-transform:none;font-size:10px;color:#666">click to buy</span></h2>
+<div class="shop" id="shop"></div>
+
+<h2 style="margin-top:12px">🏋️ GYM EMPIRE — AUTO INCOME</h2>
+<div class="shop" id="gymShop"></div>
+
+<div class="ad">
+<div>📢 AdSense Placeholder</div>
+<div id="adsense-slot" style="margin-top:6px;color:#444">ca-pub-XXXXXXXXXX • Responsive ad unit</div>
+<div style="margin-top:6px;display:flex;gap:6px;justify-content:center"><span class="belt">300x250</span><span class="belt">Idle game monetization</span></div>
+</div>
+
+<div class="footer">
+<div>
+<div>💌 Support dev: <a href="https://paypal.me/phuonlinenew@gmail.com" target="_blank">PayPal phuonlinenew@gmail.com</a></div>
+<div>🇹🇭 PromptPay: <b style="color:#fff">0811113693</b> (Montphu)</div>
+</div>
+<div style="text-align:right">
+<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" id="saveBtn">💾 Save</button>
+<button class="btn btn-ghost" style="padding:6px 10px;font-size:11px" id="resetBtn">♻️ Restart</button>
+<div>Team B: Idle Progression</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="modal" id="fightModal">
+<div class="modal-card">
+<div style="font-size:12px;letter-spacing:1px;color:var(--gold)">CHAMPIONSHIP FIGHT</div>
+<h2 id="bossName" style="margin:8px 0">LUMPINEE CHAMP</h2>
+<div class="boss" id="bossEmoji">👹</div>
+<div class="hp"><i id="bossHp"></i></div>
+<div style="display:flex;justify-content:space-between;font-size:11px;color:#888;margin-top:6px"><span id="bossHpTxt">100%</span><span id="playerDmg">Your DPS: 0</span></div>
+<div style="margin-top:12px;display:grid;gap:8px">
+<button class="btn btn-primary" id="punchBoss">🥊 PUNCH! (tap fast)</button>
+<button class="btn btn-ghost" id="fleeBtn">🏳️ Flee</button>
+</div>
+<div style="font-size:10px;color:#666;margin-top:8px">Win = Belt + huge bonus • Lose = 10% money kept, try again!</div>
+</div>
+</div>
+
+<div class="modal" id="winModal">
+<div class="modal-card">
+<div class="wai">🙏</div>
+<h2 style="color:var(--gold);margin:6px 0" id="winTitle">WAI KRU! CHAMPION!</h2>
+<p style="font-size:13px;color:#ccc" id="winDesc">You performed Wai Kru Ram Muay — beautiful dance, crowd goes wild! Sawadee Krub!</p>
+<div style="font-size:48px;margin:8px 0" id="winBelt">🏆</div>
+<div class="kpi"><div><b id="winBonus">+5,000</b><span>BONUS ฿</span></div><div><b id="winMult">x1.5</b><span>NEW MULT</span></div><div><b>CHOK DEE</b><span>THAI POWER</span></div></div>
+<button class="btn btn-primary" id="claimBtn" style="margin-top:12px">🎉 CLAIM BELT & DANCE</button>
+</div>
+</div>
+
+<script>
+const $=s=>document.getElementById(s);
+const shopData=[
+{id:'gloves',icon:'🥊',name:'Twins Gloves',desc:'+1 per punch',base:15,grow:1.35,ppc:1},
+{id:'shorts',icon:'🩳',name:'Muay Thai Shorts',desc:'+3 per punch • Mongkol luck',base:120,grow:1.45,ppc:3},
+{id:'shinguard',icon:'🦵',name:'Shin Guards',desc:'+8 per punch • Teep mastery',base:450,grow:1.5,ppc:8},
+{id:'trainer',icon:'🧑‍🏫',name:'Kru Yodtong Trainer',desc:'+20 per punch + mentor',base:1500,grow:1.6,ppc:20},
+{id:'elbow',icon:'💪',name:'Sok Elbow Blades',desc:'+55 per punch • Brutal',base:6000,grow:1.65,ppc:55},
+{id:'mongkol',icon:'👑',name:'Sacred Mongkol',desc:'+140/punch • x1.2 all',base:18000,grow:1.72,ppc:140,mult:1.2},
+{id:'yantra',icon:'🔱',name:'Sak Yant Tattoo',desc:'+400/punch • x1.4 all',base:65000,grow:1.78,ppc:400,mult:1.4},
+];
+const gymData=[
+{id:'bag',icon:'🎒',name:'Heavy Bag',desc:'+1 auto dps',base:50,grow:1.4,dps:1},
+{id:'tires',icon:'🛞',name:'Truck Tires',desc:'+5 dps • Conditioning',base:300,grow:1.5,dps:5},
+{id:'ring',icon:'⭕',name:'Local Ring',desc:'+20 dps • Fight club',base:1400,grow:1.55,dps:20},
+{id:'crowd',icon:'👥',name:'Thai Crowd',desc:'+80 dps • Gambling fans',base:8000,grow:1.6,dps:80},
+{id:'stadium',icon:'🏟️',name:'Rajadamnern Rent',desc:'+250 dps • Big show',base:32000,grow:1.7,dps:250},
+{id:'camp',icon:'🏕️',name:'Muay Thai Camp',desc:'+900 dps • Foreign students',base:150000,grow:1.75,dps:900},
+];
+const belts=[
+{name:'Prajioud White',emoji:'🤍',need:1000,boss:'Street Kid',bossEmoji:'🧒'},
+{name:'Yellow Prajioud',emoji:'💛',need:8000,boss:'Bangkok Brawler',bossEmoji:'🥋'},
+{name:'Green Prajioud',emoji:'💚',need:35000,boss:'Lumpinee Hopeful',bossEmoji:'😤'},
+{name:'Blue Prajioud',emoji:'💙',need:150000,boss:'Lumpinee Top 5',bossEmoji:'👹'},
+{name:'Red Prajioud',emoji:'❤️',need:600000,boss:'Rajadamnern Champ',bossEmoji:'👑'},
+{name:'Black Mongkol',emoji:'🖤',need:2500000,boss:'Buakaw Legend',bossEmoji:'🔥'},
+{name:'Golden Legend',emoji:'🏆',need:10000000,boss:'Saenchai Myth',bossEmoji:'⚡'},
+];
+
+let state={
+money:0,power:0,clicks:0,
+owned:{},gymOwned:{},
+beltIdx:0,
+mult:1,waiTimer:0,
+dps:0,
+ppcBase:1,
+};
+
+function load(){
+try{const s=JSON.parse(localStorage.getItem('mt-clicker-b')); if(s) state={...state,...s};}catch{}
+}
+function save(){localStorage.setItem('mt-clicker-b',JSON.stringify(state));}
+function fmt(n){if(n>=1e9) return (n/1e9).toFixed(1)+'B'; if(n>=1e6) return (n/1e6).toFixed(1)+'M'; if(n>=1e3) return (n/1e3).toFixed(1)+'K'; return Math.floor(n).toString();}
+function calcPPC(){
+let p=1; shopData.forEach(it=>{const c=state.owned[it.id]||0; p+=c*it.ppc;});
+state.ppcBase=p;
+return Math.floor(p*state.mult*(state.waiTimer>0?1.25:1));
+}
+function calcDPS(){
+let d=0; gymData.forEach(it=>{const c=state.gymOwned[it.id]||0; d+=c*it.dps;});
+d=Math.floor(d*state.mult*(state.waiTimer>0?1.25:1));
+state.dps=d; return d;
+}
+function costOf(base,grow,owned){return Math.floor(base*Math.pow(grow,owned));}
+
+function render(){
+$('money').textContent=fmt(state.money);
+const ppc=calcPPC(); $('ppc').textContent=fmt(ppc);
+$('kMult').textContent='x'+state.mult.toFixed(2).replace('.00','');
+$('kClicks').textContent=fmt(state.clicks);
+$('kDps').textContent=fmt(calcDPS());
+$('powerTxt').textContent='Power: '+fmt(state.power);
+$('belts').textContent=state.beltIdx+'/'+belts.length;
+const lvl = belts[Math.min(state.beltIdx,belts.length-1)];
+$('levelName').textContent = (lvl?lvl.name.toUpperCase():'LEGEND')+' • '+(state.beltIdx>=belts.length?'ETERNAL':'');
+$('fightCost').textContent = state.beltIdx>=belts.length?'MAX':fmt(lvl.need)+' Power';
+const xpPct = state.beltIdx>=belts.length?100: Math.min(100, (state.power/lvl.need)*100);
+$('xpBar').style.width=xpct+'%';
+
+ // belts row
+ $('beltRow').innerHTML=belts.map((b,i)=>`<span class="belt ${i<state.beltIdx?'won':''}">${b.emoji} ${b.name}</span>`).join('');
+
+ // shop
+ $('shop').innerHTML=shopData.map(it=>{
+ const own=state.owned[it.id]||0; const cost=costOf(it.base,it.grow,own); const can=state.money>=cost;
+ return `<div class="item ${can?'':'disabled'}" data-id="${it.id}" data-type="shop"><div class="item-icon">${it.icon}</div><div class="item-info"><b>${it.name} <small style="color:var(--gold)">Lv${own}</small></b><small>${it.desc}</small></div><div class="price">💰 ${fmt(cost)}<small>+${fmt(it.ppc)}/c</small></div></div>`;
+ }).join('');
+ $('gymShop').innerHTML=gymData.map(it=>{
+ const own=state.gymOwned[it.id]||0; const cost=costOf(it.base,it.grow,own); const can=state.money>=cost;
+ return `<div class="item ${can?'':'disabled'}" data-id="${it.id}" data-type="gym"><div class="item-icon">${it.icon}</div><div class="item-info"><b>${it.name} <small style="color:var(--cyan)">x${own}</small></b><small>${it.desc}</small></div><div class="price">💰 ${fmt(cost)}<small>${fmt(it.dps)} DPS</small></div></div>`;
+ }).join('');
+}
+
+let audioCtx;
+function beep(f=800, t=0.08, v=0.1){
+try{
+if(!audioCtx) audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+const o=audioCtx.createOscillator(); const g=audioCtx.createGain();
+o.frequency.value=f; o.connect(g); g.connect(audioCtx.destination);
+g.gain.setValueAtTime(v, audioCtx.currentTime);
+g.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime+t);
+o.start(); o.stop(audioCtx.currentTime+t);
+}catch{}
+}
+
+function floatText(txt, x){
+ const el=document.createElement('div'); el.className='float'; el.textContent=txt;
+ el.style.left=(50+ (Math.random()*30-15))+'%';
+ $('clickArea').appendChild(el);
+ setTimeout(()=>el.remove(),700);
+}
+
+function punch(mult=1){
+ const ppc=calcPPC()*mult;
+ state.money+=ppc;
+ state.power+=ppc;
+ state.clicks+=1;
+ floatText('+'+fmt(ppc)+' ฿',0);
+ $('fighterZone').classList.add('punch'); $('clickArea').classList.add('hit');
+ setTimeout(()=>{$('fighterZone').classList.remove('punch'); $('clickArea').classList.remove('hit');},110);
+ beep(300+Math.random()*400,0.09,0.12);
+ render();
+}
+
+$('clickArea').addEventListener('pointerdown', e=>{e.preventDefault(); punch();});
+$('clickArea').addEventListener('keydown', e=>{if(e.code==='Space') punch();});
+$('clickArea').tabIndex=0;
+
+document.addEventListener('click', e=>{
+ const it=e.target.closest('.item'); if(!it) return;
+ const id=it.dataset.id; const type=it.dataset.type;
+ if(type==='shop'){
+  const data=shopData.find(x=>x.id===id); const own=state.owned[id]||0; const cost=costOf(data.base,data.grow,own);
+  if(state.money>=cost){state.money-=cost; state.owned[id]=own+1; if(data.mult) state.mult*= data.owned?1: data.mult; else if(data.mult) state.mult=Math.pow(data.mult, state.owned[id]); // initial mult adjust
+   // recalc mult properly:
+   let m=1; shopData.forEach(s=>{if(s.mult){const c=state.owned[s.id]||0; if(c>0) m*=Math.pow(s.mult,c);}}); state.mult=Math.max(1, Math.round(m*100)/100);
+   beep(600,0.12,0.15); render(); save();
+  }
+ } else {
+  const data=gymData.find(x=>x.id===id); const own=state.gymOwned[id]||0; const cost=costOf(data.base,data.grow,own);
+  if(state.money>=cost){state.money-=cost; state.gymOwned[id]=own+1; beep(900,0.12,0.15); render(); save();}
+ }
+});
+
+$('waiBtn').addEventListener('click', ()=>{
+ if(state.waiTimer>0) return;
+ if(state.money<200){floatText('Need 200฿!',0); return;}
+ state.money-=200; state.waiTimer=15;
+ floatText('WAI KRU! +25%',0); beep(500,0.4,0.2);
+ render();
+});
+
+ // Fight system
+ let bossHp=0,bossMax=0,bossDmg=0,fightInterval=null;
+ function openFight(){
+  if(state.beltIdx>=belts.length){alert('You are Golden Legend! Prestige to keep climbing - Sawasdee!'); return;}
+  const belt=belts[state.beltIdx];
+  if(state.power<belt.need){floatText('Need '+fmt(belt.need)+' Power!',0); beep(200,0.3,0.2); return;}
+  bossMax=belt.need*2; bossHp=bossMax; bossDmg=0;
+  $('bossName').textContent=belt.boss; $('bossEmoji').textContent=belt.bossEmoji;
+  $('fightModal').classList.add('open'); $('bossHp').style.width='100%'; $('bossHpTxt').textContent='100%';
+  $('playerDmg').textContent='DPS: '+fmt(calcDPS())+' + click!';
+  if(fightInterval) clearInterval(fightInterval);
+  fightInterval=setInterval(()=>{
+   // auto dps
+   const d=calcDPS()/10 + bossDmg*0.05; // decay boss dmg accumulation?
+   bossHp-=calcDPS()/10;
+   updateBoss();
+  },100);
+ }
+ function updateBoss(){
+  const pct=Math.max(0, bossHp/bossMax*100); $('bossHp').style.width=pct+'%'; $('bossHpTxt').textContent=Math.ceil(pct)+'%';
+  if(bossHp<=0){clearInterval(fightInterval); winBelt();}
+ }
+ function winBelt(){
+  $('fightModal').classList.remove('open');
+  const b=belts[state.beltIdx];
+  const bonus=b.need*3;
+  $('winBelt').textContent=b.emoji+' '+b.name; $('winBonus').textContent='+'+fmt(bonus);
+  state.mult = Math.round((state.mult*1.25+0.25)*100)/100;
+  $('winMult').textContent='x'+state.mult.toFixed(2);
+  $('winTitle').textContent='WAI KRU! '+b.name+' WON!';
+  $('winDesc').textContent='You did Ram Muay Wai Kru dance! Elder gives blessing. Crowd shouts "Chai Yo!"';
+  $('winModal').classList.add('open');
+  state._pendingBonus=bonus;
+  beep(800,0.5,0.2);
+ }
+ $('fightBtn').addEventListener('click', openFight);
+ $('punchBoss').addEventListener('pointerdown', e=>{
+  e.preventDefault();
+  const dmg=calcPPC()*0.6; bossHp-=dmg; bossDmg+=dmg*0.01;
+  beep(400+Math.random()*300,0.07,0.12);
+  updateBoss();
+  $('bossEmoji').style.transform='scale(1.2)'; setTimeout(()=>{$('bossEmoji').style.transform='';},80);
+ });
+ $('fleeBtn').addEventListener('click', ()=>{clearInterval(fightInterval); $('fightModal').classList.remove('open');});
+ $('claimBtn').addEventListener('click', ()=>{
+  $('winModal').classList.remove('open');
+  state.money+=state._pendingBonus||0;
+  state.beltIdx++;
+  state.power=0; // reset power progression for next belt? keeps power? reset to 0 to encourage loop
+  save(); render();
+  // Wai Kru dance effect
+  $('fighter').textContent='🙏'; setTimeout(()=>{$('fighter').textContent='🦵';},1800);
+ });
+
+ $('saveBtn').addEventListener('click', ()=>{save(); floatText('Saved!',0);});
+ $('resetBtn').addEventListener('click', ()=>{
+  if(confirm('Restart from zero? You keep belts? No, full wipe! Chai yen yen?')){localStorage.removeItem('mt-clicker-b'); location.reload();}
+ });
+
+ // loop
+ setInterval(()=>{
+  if(calcDPS()>0){state.money+=state.dps/10; state.power+=state.dps/10; render();}
+  if(state.waiTimer>0){state.waiTimer-=0.1; if(state.waiTimer<=0){state.waiTimer=0; render();}}
+ },100);
+
+ load(); render();
+// keyboard punch
+window.addEventListener('keydown', e=>{if(e.code==='Space'){e.preventDefault(); punch();}});
+</script>
+
+<!-- Monetization: AdSense placeholder already above. PayPal + PromptPay in footer. -->
+</body>
+</html>

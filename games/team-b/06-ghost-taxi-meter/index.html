@@ -1,0 +1,337 @@
+<<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>Ghost Taxi Meter - Bangkok Horror Drive</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#05020a;color:#e8e8e8;font-family:'Courier New',monospace;overflow:hidden;height:100vh;height:100dvh;display:flex;flex-direction:column;touch-action:none}
+#topbar{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#0f0f14;border-bottom:1px solid #2a2a3a;font-size:11px;letter-spacing:1px;z-index:10}
+#topbar b{color:#ff3b3b}
+#gameWrap{flex:1;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 0%,#1a1230 0%,#08020f 70%)}
+canvas{display:block;width:100%;height:100%}
+#hud{position:absolute;inset:0;pointer-events:none}
+.meter{position:absolute;top:10px;left:10px;background:rgba(0,0,0,.85);border:1px solid #ffcc00;color:#ffcc00;padding:8px 10px;border-radius:6px;min-width:132px;box-shadow:0 0 12px rgba(255,204,0,.25)}
+.meter .label{font-size:9px;letter-spacing:2px;opacity:.8}
+.meter .val{font-size:20px;font-weight:900;line-height:1}
+.meter .sub{font-size:9px;color:#aaa}
+#dest{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.85);border:1px solid #3a3a5a;padding:8px 10px;border-radius:6px;min-width:125px;text-align:right}
+#dest .bar{height:6px;background:#222;border-radius:3px;margin-top:4px;overflow:hidden}
+#dest .fill{height:100%;background:linear-gradient(90deg,#00ff88,#00ccff);width:0%;transition:width .2s}
+#rearview{position:absolute;top:48%;left:50%;transform:translateX(-50%);width:42%;height:18%;max-width:280px;background:linear-gradient(#000,#111);border:2px solid #444;border-radius:8px 8px 2px 2px;overflow:hidden;box-shadow:0 0 0 1px #000,0 4px 20px rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center}
+#rearview::after{content:'REAR VIEW';position:absolute;top:2px;left:50%;transform:translateX(-50%);font-size:7px;letter-spacing:3px;color:#555}
+#ghostInMirror{font-size:28px;opacity:0;transition:opacity .15s;filter:blur(.2px)}
+#ghostInMirror.show{opacity:1;animation:glitch .12s infinite}
+@keyframes glitch{0%{transform:translate(-1px,0)}50%{transform:translate(1px,1px)}100%{transform:translate(0,-1px)}}
+#sanityWrap{position:absolute;bottom:92px;left:10px;right:10px;background:rgba(0,0,0,.7);border:1px solid #333;border-radius:4px;padding:4px 8px;display:flex;align-items:center;gap:8px}
+#sanityWrap span{font-size:9px;letter-spacing:2px;white-space:nowrap}
+#sanityBar{flex:1;height:8px;background:#1a1a1a;border-radius:4px;overflow:hidden}
+#sanityFill{height:100%;width:100%;background:linear-gradient(90deg,#ff0055,#ffcc00);transition:width .3s}
+#controls{position:absolute;bottom:0;left:0;right:0;display:flex;gap:6px;padding:8px;background:linear-gradient(transparent,rgba(0,0,0,.9));pointer-events:auto}
+.btn{flex:1;padding:12px 4px;border-radius:10px;border:1px solid #333;background:#1a1a22;color:#ddd;font-family:inherit;font-weight:700;font-size:12px;letter-spacing:1px;user-select:none}
+.btn:active{transform:scale(.96);filter:brightness(1.4)}
+#btnLook{border-color:#550000;background:#220a0a;color:#ff9999}
+#btnHonk{border-color:#00aaff;background:#0a1a22}
+#btnSteerL,#btnSteerR{flex:.6;background:#16161e}
+#overlay{position:absolute;inset:0;background:rgba(3,0,12,.92);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px;text-align:center;z-index:30}
+#overlay h1{font-size:28px;line-height:.9;letter-spacing:-1px;color:#fff;text-shadow:0 0 20px #ff0033,0 0 40px #ff0033}
+#overlay h1 i{color:#ffcc00;font-style:normal}
+#overlay p{margin:10px 0;font-size:13px;color:#aaa;max-width:360px;line-height:1.4}
+.tag{display:inline-block;border:1px solid #ff0033;color:#ff5566;font-size:9px;padding:2px 6px;border-radius:20px;letter-spacing:2px;margin:6px}
+#startBtn{margin-top:14px;padding:14px 28px;border:none;border-radius:30px;background:#ffcc00;color:#000;font-family:inherit;font-weight:900;font-size:15px;letter-spacing:1px;cursor:pointer;box-shadow:0 0 20px rgba(255,204,0,.5)}
+#startBtn:active{transform:scale(.95)}
+#gameOver{display:none;position:absolute;inset:0;background:radial-gradient(#1a0005,#000);z-index:40;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+#gameOver h2{font-size:32px;color:#ff0033}
+#gameOver h3{color:#ffcc00;margin:8px 0}
+#gameOver p{font-size:12px;color:#888;max-width:320px}
+#restart{margin-top:16px;padding:12px 24px;border-radius:30px;border:1px solid #ffcc00;background:transparent;color:#ffcc00;font-weight:900;font-family:inherit;cursor:pointer}
+#ads{height:50px;background:#0a0a0f;border-top:1px solid #1a1a2a;display:flex;align-items:center;justify-content:center;font-size:9px;letter-spacing:2px;color:#444}
+#pay{position:absolute;bottom:92px;right:10px;pointer-events:auto;display:flex;gap:6px;transform:scale(.85);transform-origin:bottom right;z-index:5}
+#pay a{font-size:9px;color:#666;border:1px solid #333;padding:3px 6px;border-radius:4px;text-decoration:none;background:rgba(0,0,0,.6)}
+.jumpscare{position:absolute;inset:0;background:#000;z-index:100;display:none;align-items:center;justify-content:center;flex-direction:column}
+.jumpscare.show{display:flex;animation:flash .15s 4}
+@keyframes flash{0%,100%{background:#000}50%{background:#300}}
+.jumpscare b{font-size:64px}
+.jumpscare p{font-size:22px;color:#ff0033;margin-top:10px;font-weight:900;letter-spacing:4px}
+#thai{position:absolute;top:50%;left:6px;writing-mode:vertical-rl;font-size:10px;letter-spacing:4px;color:rgba(255,255,255,.08);pointer-events:none}
+@media(min-width:700px){#rearview{width:30%} #sanityWrap{bottom:70px}}
+</style>
+</head>
+<body>
+<div id="topbar"><div>MONTPHU FACTORY TEAM B <b>06</b> GHOST TAXI METER</div><div>BKK 02:13 AM - ผี</div></div>
+<div id="gameWrap">
+<canvas id="c"></canvas>
+<div id="thai">แท็กซี่ผี มิเตอร์วิ่ง ความหลอน</div>
+<div id="hud">
+<div class="meter"><div class="label">METER - มิเตอร์</div><div class="val" id="meterVal">฿ 35</div><div class="sub" id="meterSub">START - DIST 0.0km</div></div>
+<div id="dest"><div style="font-size:10px;letter-spacing:1px">DESTINATION</div><div id="destName" style="font-size:11px;color:#7af;font-weight:700">RCA - Rama 9</div><div class="bar"><div class="fill" id="destFill"></div></div><div id="distTxt" style="font-size:9px;color:#888;margin-top:2px">4.2 km left</div></div>
+<div id="rearview"><div id="ghostInMirror"> </div></div>
+<div id="sanityWrap"><span>STAI</span><span style="color:#ff5577">สติ</span><div id="sanityBar"><div id="sanityFill"></div></div><span id="sanityPct">100%</span></div>
+<div id="controls">
+<button class="btn" id="btnSteerL">◀</button>
+<button class="btn" id="btnLook">👁 LOOK BACK</button>
+<button class="btn" id="btnHonk">🔊 HONK ไล่ผี</button>
+<button class="btn" id="btnSteerR">▶</button>
+</div>
+<div id="pay"><a href="https://paypal.me/?email=phuonlinenew@gmail.com" target="_blank">PayPal Donate</a><a href="#">PromptPay 0811113693</a></div>
+</div>
+<div id="overlay">
+<div class="tag">HORROR DRIVING • PSYCHOLOGICAL • TEAM B</div>
+<h1>GHOST<br><i>TAXI METER</i></h1>
+<p><b style="color:#fff">Bangkok 2AM.</b> Meter keeps running. Passenger in the back seat. But you didn't pick anyone up.<br><br>
+<span style="color:#ff5577">กฎ: อย่าหันกลับไปมอง</span> — RULE: DON'T LOOK BACK.<br>
+Honk to repel. Drive to <span id="destTitle">RCA</span> before sanity breaks.<br><br>
+<span style="font-size:10px;color:#666">Steer with A/D or touch ◀ ▶ • Space = Honk • Hold Look Back = Death</span></p>
+<p style="font-size:10px;color:#555;margin-top:8px">Controls: Keyboard + Mobile • Different from Team A Cozy style - This is pure horror.</p>
+<button id="startBtn">START NIGHT SHIFT - เริ่มงาน</button>
+<div style="margin-top:10px;font-size:9px;color:#444">© Montphu Factory • Ads: <span id="adsensePH">AdSense Placeholder - ca-pub-XXXX</span></div>
+</div>
+<div id="gameOver">
+<h2 id="goTitle">LOST</h2>
+<h3 id="goScore">฿0</h3>
+<p id="goDesc"></p>
+<button id="restart">DRIVE AGAIN - ขับอีกครั้ง</button>
+<div style="margin-top:12px;display:flex;gap:8px"><a href="https://paypal.me/?email=phuonlinenew@gmail.com" target="_blank" style="color:#666;font-size:10px;text-decoration:none;border:1px solid #333;padding:4px 8px;border-radius:4px">PayPal: phuonlinenew@gmail.com</a><span style="color:#666;font-size:10px;border:1px solid #333;padding:4px 8px;border-radius:4px">PromptPay: 0811113693</span></div>
+</div>
+<div class="jumpscare" id="jumpscare"><b id="jsFace">👻</b><p id="jsText">DON'T LOOK BACK</p></div>
+</div>
+<div id="ads">AdSense Placeholder Banner - ca-pub-XXXX - Ghost Taxi Sponsored - แท็กซี่ผี</div>
+<script>
+(function(){
+const c=document.getElementById('c');
+const ctx=c.getContext('2d');
+let W,H,DPR;
+function resize(){DPR=Math.min(devicePixelRatio||1,2);W=c.clientWidth;H=c.clientHeight;c.width=W*DPR;c.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);}
+window.addEventListener('resize',resize);resize();
+let running=false, t=0, speed=3.5, maxSpeed=6.5, xOff=0, steer=0, meter=35, distance=0, totalDist=4200, sanity=100;
+let ghostState=0; //0 none,1 in mirror,2 behind ready
+let ghostTimer=0, nextGhost=0, lastHonk=0, roadShake=0;
+let score=0, obstacles=[], particles=[];
+const dests=[["RCA - Rama 9","อาร์ซีเอ"],["Wat Hua Lamphong","วัดหัวลำโพง"],["Sathorn Ghost Tower","ตึกผีสาธร"],["Ekkamai Bus Terminal","เอกมัย"],["On Nut Soi 66 - ป่าช้า","On Nut Cemetery"],["Victory Monument 02:40","อนุสาวรีย์"],["Chatuchak Old Market","จตุจักร"]];
+let destIdx=0;
+const ghostFaces=["👻","💀","👁️","🫣","😵‍💫","🧟‍♀️","👹"];
+const thaiWhisper=["อย่ามอง...","ช่วยด้วย...","จอด...","มิเตอร์วิ่งแล้ว...","ไปส่งหน่อย...","มองกระจกสิ..."];
+let whisperIdx=0;
+function reset(){
+ meter=35; distance=0; sanity=100; xOff=0; steer=0; speed=3.5; score=0; ghostState=0; ghostTimer=0; nextGhost=120+Math.random()*200; obstacles=[]; particles=[]; t=0;
+ destIdx=Math.floor(Math.random()*dests.length);
+ document.getElementById('destName').textContent=dests[destIdx][0];
+ document.getElementById('destTitle').textContent=dests[destIdx][0];
+ document.getElementById('ghostInMirror').className='';
+ document.getElementById('ghostInMirror').textContent='';
+ document.getElementById('sanityFill').style.width='100%';
+}
+function spawnObstacle(){
+ const lane = (Math.random()-0.5)*1.4;
+ obstacles.push({z:0,s:0.8+Math.random()*0.6,x:lane,type:Math.random()<0.6?0:1});
+}
+function update(){
+ if(!running) return;
+ t++;
+ distance+=speed;
+ // meter calc Thai taxi start 35 + 6.5 per km approx
+ meter = 35 + Math.floor(distance/100 * 6.5);
+ score = meter;
+ document.getElementById('meterVal').textContent='฿ '+meter;
+ document.getElementById('meterSub').textContent=(distance/1000).toFixed(1)+'km • '+(20+Math.floor(distance/340)%40)+'°C • '+thaiWhisper[whisperIdx%thaiWhisper.length].toUpperCase();
+ const prog = Math.min(100, (distance/totalDist)*100);
+ document.getElementById('destFill').style.width=prog+'%';
+ document.getElementById('distTxt').textContent=((totalDist-distance)/1000).toFixed(1)+' km left - เหลือ';
+ if(t% (45 - Math.floor(speed*3))===0 && Math.random()<0.7) spawnObstacle();
+ // ghost logic
+ nextGhost--;
+ if(nextGhost<=0){
+  if(ghostState===0 && Math.random()<0.02){
+   ghostState=1;
+   ghostTimer=80+Math.random()*120;
+   const gm=document.getElementById('ghostInMirror');
+   gm.textContent=ghostFaces[Math.floor(Math.random()*ghostFaces.length)];
+   gm.classList.add('show');
+   whisperIdx++;
+  }
+ }
+ if(ghostState===1){
+  ghostTimer--;
+  if(ghostTimer<=0){
+   // move to behind
+   ghostState=2;
+   ghostTimer=180+Math.random()*180;
+   document.getElementById('ghostInMirror').classList.remove('show');
+   setTimeout(()=>{document.getElementById('ghostInMirror').textContent='';},200);
+   roadShake=12;
+  }
+ }
+ if(ghostState===2){
+  ghostTimer--;
+  sanity -= 0.12 + (meter>200?0.08:0);
+  if(ghostTimer<=0 || t%90===0){
+   if(Math.random()<0.15){ // whisper event
+    roadShake=8;
+   }
+  }
+ }
+ if(steer!==0){
+  xOff += steer*0.09*speed;
+  xOff = Math.max(-1.6,Math.min(1.6,xOff));
+ }else{
+  xOff*=0.92;
+ }
+ if(speed<maxSpeed) speed+=0.006;
+ // obstacles update
+ for(let i=obstacles.length-1;i>=0;i--){
+  const o=obstacles[i];
+  o.z += speed*0.045 * o.s;
+  if(o.z>1.2){ obstacles.splice(i,1); if(Math.abs(o.x - xOff)<0.45){ sanity-=8; roadShake=15; popParticle(W/2,H/2); } }
+ }
+ document.getElementById('sanityFill').style.width=Math.max(0,sanity)+'%';
+ document.getElementById('sanityPct').textContent=Math.ceil(sanity)+'%';
+ document.getElementById('sanityFill').style.background = sanity<30? '#ff0033' : sanity<60? 'linear-gradient(90deg,#ff5500,#ffcc00)' : 'linear-gradient(90deg,#ff0055,#ffcc00)';
+ if(sanity<=0){ gameOver(false); return; }
+ if(distance>=totalDist){ gameOver(true); return; }
+ if(roadShake>0) roadShake--;
+}
+function popParticle(cx,cy){
+ for(let i=0;i<10;i++) particles.push({x:cx+(Math.random()-0.5)*80,y:cy+(Math.random()-0.5)*40,vx:(Math.random()-0.5)*6,vy:(Math.random()-0.5)*6,life:20});
+}
+function drawRoad(){
+ const cx=W/2 + xOff*80 + (roadShake? (Math.random()-0.5)*roadShake :0);
+ const horizon=H*0.28;
+ // sky
+ let g=ctx.createLinearGradient(0,0,0,H);
+ g.addColorStop(0,'#0a0520'); g.addColorStop(0.28,'#1a0a2e'); g.addColorStop(0.45,'#080212'); g.addColorStop(1,'#05010a');
+ ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+ // city lights / bangkok skyline silhouette
+ ctx.fillStyle='rgba(255,200,60,0.05)'; 
+ for(let i=0;i<14;i++){
+  let bx = (W * ((i*0.13 + (t*0.0006))%1.2)-W*0.1);
+  let bw=20+ (i%3)*18; let bh=30+ (i*17)%60;
+  ctx.fillRect(bx, horizon-bh, bw, bh);
+  if(i%2===0){ ctx.fillStyle='rgba(0,255,255,0.08)'; ctx.fillRect(bx+bw*0.3,horizon-bh*0.7,2,bh*0.4); ctx.fillStyle='rgba(255,200,60,0.05)';}
+ }
+ // road perspective
+ ctx.save();
+ ctx.beginPath(); ctx.moveTo(cx, horizon); ctx.lineTo(cx - W*0.6, H); ctx.lineTo(cx + W*0.6, H); ctx.lineTo(cx, horizon); ctx.closePath();
+ let rg=ctx.createLinearGradient(0,horizon,0,H);
+ rg.addColorStop(0,'#1a1a22'); rg.addColorStop(0.3,'#15151c'); rg.addColorStop(1,'#0c0c10');
+ ctx.fillStyle=rg; ctx.fill();
+ // center dashed
+ ctx.strokeStyle=ghostState===2?'#ff0033':'#ffeeaa';
+ ctx.lineWidth=2; ctx.setLineDash([18,22]); ctx.lineDashOffset=-t* speed*3;
+ ctx.beginPath(); ctx.moveTo(cx, horizon); ctx.lineTo(cx, H); ctx.stroke(); ctx.setLineDash([]);
+ // side lines
+ ctx.strokeStyle='rgba(255,255,255,0.18)'; ctx.lineWidth=3;
+ ctx.beginPath(); ctx.moveTo(cx - W*0.52, H); ctx.lineTo(cx - W*0.12, horizon); ctx.stroke();
+ ctx.beginPath(); ctx.moveTo(cx + W*0.52, H); ctx.lineTo(cx + W*0.12, horizon); ctx.stroke();
+ // obstacles
+ for(const o of obstacles){
+  let pz = o.z; //0-1.2
+  let py = horizon + (H-horizon)*Math.pow(pz,1.5);
+  let sz = 8 + pz*80 * o.s;
+  let px = cx + o.x* (W*0.5 * pz) + (pz>0.6? xOff*-25*pz :0);
+  if(o.type===0){
+   // car
+   ctx.fillStyle='#2a2a35'; ctx.fillRect(px-sz/2, py-sz/2, sz, sz*0.6);
+   ctx.fillStyle='#ff3333'; ctx.fillRect(px-sz/2+2, py-sz/2, 4,4); ctx.fillRect(px+sz/2-6, py-sz/2,4,4);
+  }else{
+   // phi on road
+   ctx.font=(sz*1.2)+'px serif'; ctx.textAlign='center'; ctx.fillText('👻', px, py);
+   if(Math.random()<0.02) ctx.fillStyle='rgba(255,0,80,0.2)';
+  }
+ }
+ // dashboard bottom
+ let dashH= H*0.18;
+ let dashG=ctx.createLinearGradient(0,H-dashH,0,H);
+ dashG.addColorStop(0,'#1e1e26'); dashG.addColorStop(1,'#0a0a0e');
+ ctx.fillStyle=dashG; ctx.fillRect(0,H-dashH,W,dashH);
+ ctx.fillStyle='rgba(255,204,0,0.15)'; ctx.fillRect(cx-60, H-dashH+12, 120, 28);
+ ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.strokeRect(cx-60,H-dashH+12,120,28);
+ ctx.restore();
+ // particles
+ for(let p of particles){ p.x+=p.vx; p.y+=p.vy; p.life--; ctx.fillStyle=ghostState? '#ff3366':'#ffcc00'; ctx.fillRect(p.x,p.y,3,3); }
+ particles=particles.filter(p=>p.life>0);
+ // vignette
+ let vg=ctx.createRadialGradient(W/2,H/2,W*0.2,W/2,H/2,W);
+ vg.addColorStop(0,'rgba(0,0,0,0)'); vg.addColorStop(0.7,'rgba(0,0,0,0.2)'); vg.addColorStop(1,'rgba(0,0,0,0.85)');
+ ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+ // ghost overlay when behind
+ if(ghostState===2){
+  let a = 0.1 + Math.sin(t*0.12)*0.05 + (100-sanity)*0.004;
+  ctx.fillStyle='rgba(255,0,40,'+a+')'; ctx.fillRect(0,0,W,H);
+  if(t% 60 < 18){
+   ctx.fillStyle='rgba(255,255,255,0.04)'; ctx.font='12px monospace'; ctx.fillText(thaiWhisper[whisperIdx%thaiWhisper.length], 20+Math.random()*60, H*0.4+Math.random()*80);
+  }
+ }
+}
+function loop(){ update(); drawRoad(); if(running) requestAnimationFrame(loop); }
+function start(){ reset(); running=true; document.getElementById('overlay').style.display='none'; document.getElementById('gameOver').style.display='none'; loop(); }
+function gameOver(win){
+ running=false;
+ const go=document.getElementById('gameOver'); go.style.display='flex';
+ document.getElementById('goTitle').textContent=win?'DELIVERED - ส่งถึงแล้ว':'POSSESSED - โดนผีสิง';
+ document.getElementById('goScore').textContent='฿'+meter+' • '+(distance/1000).toFixed(1)+'km • STAY '+(win?'★★★':'☠');
+ document.getElementById('goDesc').textContent=win
+ ? 'You reached '+dests[destIdx][0]+'. The passenger disappeared. Meter: ฿'+meter+'. Thai drivers say: never check the back seat at 3AM. คุณทำได้! - Bangkok taxi legend continues.'
+ : 'You looked back / sanity broke at '+dests[destIdx][0]+'. Distance: '+(distance/1000).toFixed(1)+'km. The ghost now rides forever. อย่าหันหลัง... - Meter keeps running even without you.';
+ if(!win){ triggerJumpscare(); }
+}
+function triggerJumpscare(){
+ const js=document.getElementById('jumpscare'); js.classList.add('show');
+ document.getElementById('jsFace').textContent=['👁️','💀','👹','🩸'][Math.floor(Math.random()*4)];
+ setTimeout(()=>js.classList.remove('show'),1200);
+}
+// controls
+document.getElementById('startBtn').addEventListener('click',start);
+document.getElementById('restart').addEventListener('click',start);
+let lookHeld=false;
+function doLook(start){
+ if(!running) return;
+ lookHeld=start;
+ if(start){
+  if(ghostState===1 || ghostState===2){
+   sanity-=22; roadShake=20; popParticle(W/2,H/3);
+   triggerJumpscare();
+   document.getElementById('ghostInMirror').textContent='👁️👁️';
+   if(Math.random()<0.5){ // fatal
+    if(sanity<40){ setTimeout(()=>gameOver(false),300); }
+   }
+   // reset ghost after look
+   ghostState=0; nextGhost=200+Math.random()*300; document.getElementById('ghostInMirror').classList.remove('show');
+  }else{
+   sanity-=2; document.getElementById('meterSub').textContent='Nothing in back...? - ไม่มีใคร?';
+  }
+ }
+}
+document.getElementById('btnLook').addEventListener('touchstart',e=>{e.preventDefault();doLook(true);});
+document.getElementById('btnLook').addEventListener('touchend',e=>{e.preventDefault();lookHeld=false;});
+document.getElementById('btnLook').addEventListener('mousedown',()=>doLook(true));
+document.getElementById('btnLook').addEventListener('mouseup',()=>lookHeld=false);
+document.getElementById('btnHonk').addEventListener('click',()=>{ if(!running) return; if(Date.now()-lastHonk<800) return; lastHonk=Date.now(); roadShake=6; if(ghostState===2){ ghostTimer-=60; sanity+=4; if(sanity>100) sanity=100; if(ghostTimer<=0){ghostState=0; nextGhost=300;}} popParticle(W/2,H*0.6); });
+let steerL=false, steerR=false;
+function setSteer(){ if(steerL&&!steerR) steer=-1; else if(steerR&&!steerL) steer=1; else steer=0; }
+document.getElementById('btnSteerL').addEventListener('touchstart',e=>{e.preventDefault();steerL=true;setSteer();});
+document.getElementById('btnSteerL').addEventListener('touchend',e=>{e.preventDefault();steerL=false;setSteer();});
+document.getElementById('btnSteerR').addEventListener('touchstart',e=>{e.preventDefault();steerR=true;setSteer();});
+document.getElementById('btnSteerR').addEventListener('touchend',e=>{e.preventDefault();steerR=false;setSteer();});
+document.getElementById('btnSteerL').addEventListener('mousedown',()=>{steerL=true;setSteer();});
+document.getElementById('btnSteerL').addEventListener('mouseup',()=>{steerL=false;setSteer();});
+document.getElementById('btnSteerR').addEventListener('mousedown',()=>{steerR=true;setSteer();});
+document.getElementById('btnSteerR').addEventListener('mouseup',()=>{steerR=false;setSteer();});
+window.addEventListener('keydown',e=>{
+ if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft'){steerL=e.type!=='keyup'?true:false; if(e.type==='keydown') e.preventDefault(); setSteer();}
+ if(e.key==='d'||e.key==='D'||e.key==='ArrowRight'){steerR=e.type!=='keydown'?false:e.type==='keydown'; if(e.type==='keydown'){steerR=true; e.preventDefault();} else steerR=false; setSteer();}
+ if(e.key===' '){ if(e.type==='keydown'){document.getElementById('btnHonk').click();}}
+ if(e.key==='l'||e.key==='L'){ doLook(e.type==='keydown'); }
+});
+window.addEventListener('keyup',e=>{
+ if(e.key==='a'||e.key==='A'||e.key==='ArrowLeft'){steerL=false;setSteer();}
+ if(e.key==='d'||e.key==='D'||e.key==='ArrowRight'){steerR=false;setSteer();}
+ if(e.key==='l'||e.key==='L'){lookHeld=false;}
+});
+// keyboard compat
+window.addEventListener('keydown',e=>{ if(e.key==='ArrowLeft'||e.key==='ArrowRight'||e.key===' ') e.preventDefault(); }, {passive:false});
+resize();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Long Boat Race - Sawng Ruea Yao - Montphu Factory Team B</title>
+<meta name="description" content="Long-tail boat racing during Thai festival! Tap alternately to row fast, avoid logs, and race to the temple finish.">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;touch-action:manipulation}
+:root{--gold:#FFD23F;--red:#E53935;--blue:#0D47A1;--river:#1976D2;--sand:#FFE4B5}
+body{background:#0a1a33;color:#fff;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,sans-serif;overflow:hidden;display:flex;flex-direction:column;height:100vh;height:100dvh}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:linear-gradient(90deg,#0D47A1,#1565C0);border-bottom:3px solid var(--gold);z-index:10;flex-shrink:0}
+h1{font-size:15px;font-weight:900;letter-spacing:.5px;line-height:1}
+h1 span{color:var(--gold)}
+.hud{display:flex;gap:10px;font-weight:800;font-size:12px}
+.hud b{color:var(--gold)}
+#gameWrap{flex:1;position:relative;background:#0D47A1;overflow:hidden}
+canvas{display:block;width:100%;height:100%;}
+#controls{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-between;padding:10px 14px 14px;pointer-events:none;z-index:5}
+.ctrl{pointer-events:auto;width:46vw;max-width:220px;height:96px;border-radius:22px;border:3px solid #fff;font-weight:900;font-size:22px;letter-spacing:1px;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 0 rgba(0,0,0,.35),0 0 20px rgba(255,255,255,.2);transition:.08s; -webkit-tap-highlight-color: transparent;}
+.ctrl:active{transform:translateY(4px);box-shadow:0 4px 0 rgba(0,0,0,.35)}
+#leftBtn{background:linear-gradient(#FF6F00,#FF3D00);color:#fff}
+#rightBtn{background:linear-gradient(#FFD23F,#FFB300);color:#3E2723}
+.ctrl small{display:block;font-size:11px;font-weight:700;margin-top:2px;opacity:.9}
+.ctrl .inner{text-align:center;line-height:1}
+#centerMsg{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);text-align:center;z-index:7;pointer-events:none;text-shadow:0 2px 10px #000}
+#centerMsg h2{font-size:32px;font-weight:900}
+#centerMsg p{font-size:14px;margin-top:6px}
+.overlay{position:absolute;inset:0;background:rgba(2,12,28,.88);display:flex;align-items:center;justify-content:center;z-index:9;padding:18px}
+.card{background:linear-gradient(180deg,#fff,#FFE082);color:#1a1a1a;border-radius:18px;padding:18px 16px;width:min(420px,95vw);box-shadow:0 20px 60px rgba(0,0,0,.6);border:3px solid #0D47A1;text-align:center}
+.card h2{font-size:26px;font-weight:900;color:#0D47A1}
+.card h3{color:#BF360C;margin:4px 0}
+.badge{display:inline-block;background:#0D47A1;color:var(--gold);padding:2px 8px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.6px}
+.btn{display:inline-block;margin-top:10px;background:linear-gradient(#0D47A1,#1976D2);color:#fff;border:0;padding:12px 22px;border-radius:999px;font-weight:900;font-size:16px;box-shadow:0 6px 0 #001a4d;cursor:pointer;letter-spacing:.3px}
+.btn:active{transform:translateY(3px);box-shadow:0 3px 0 #001a4d}
+.small{font-size:12px;color:#4E342E;line-height:1.4;margin-top:10px}
+.kbd{display:inline-block;border:1px solid #999;border-bottom-width:3px;background:#eee;border-radius:6px;padding:2px 6px;font-size:11px;font-weight:800}
+footer{background:#081326;color:#8aa0c2;font-size:11px;text-align:center;padding:8px 6px 10px;line-height:1.4;border-top:2px solid #12305f;flex-shrink:0}
+footer a{color:var(--gold);text-decoration:none;font-weight:700}
+#ads{margin:6px auto 0;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.25);padding:4px 8px;border-radius:6px;font-size:10px;color:#a8b8d0;max-width:728px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🚤 LONG BOAT RACE <span>แข่งเรือยาว</span></h1>
+  <div class="hud">
+    <div>DIST <b id="dist">0</b>m</div>
+    <div>SPD <b id="spd">0</b></div>
+    <div>❤️ <b id="lives">3</b></div>
+  </div>
+</header>
+
+<div id="gameWrap">
+<canvas id="c"></canvas>
+<div id="centerMsg"></div>
+
+<div id="controls">
+  <button id="leftBtn" class="ctrl"><span class="inner">◀ LEFT<small>ซ้าย - Z / A</small></span></button>
+  <button id="rightBtn" class="ctrl"><span class="inner">RIGHT ▶<small>ขวา - X / D</small></span></button>
+</div>
+
+<div id="startScreen" class="overlay">
+  <div class="card">
+    <span class="badge">TEAM B • RACING • COMPETITIVE</span>
+    <h2>🚤 SΑWNG RUEA YAΟ</h2>
+    <h3>Long-Tail Boat Festival</h3>
+    <p class="small"><b>How to Race:</b> Tap <b>LEFT/RIGHT alternately</b> to row! Alternate = SPEED BOOST!<br>Same side twice = slow. Avoid logs & other boats. Collect Krathong 🪷 for boost. Reach Wat finish at 2000m!</p>
+    <p class="small">Controls: <span class="kbd">LEFT</span> / <span class="kbd">A</span> and <span class="kbd">RIGHT</span> / <span class="kbd">D</span> • Mobile: Big buttons<br>Thai Festival vibe: Crowd cheers louder when you go fast! สู้ๆ!</p>
+    <button id="startBtn" class="btn">START RACE! เริ่มแข่ง!</button>
+    <p class="small">Tip: Perfect rhythm = 150-300ms between taps. Watch streak multiplier!</p>
+  </div>
+</div>
+
+<div id="overScreen" class="overlay" style="display:none">
+  <div class="card">
+    <h2 id="overTitle">FINISH!</h2>
+    <p id="overStats" class="small" style="font-size:15px;color:#0D47A1;font-weight:800"></p>
+    <p id="overMsg" class="small"></p>
+    <button id="restartBtn" class="btn">RACE AGAIN แข่งใหม่</button>
+    <div class="small" style="margin-top:12px">Share your time: <span id="shareText"></span></div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <div id="ads">AdSense Placeholder — 728x90 — Replace with your AdSense code — Ad unit for Montphu Factory</div>
+  <div style="margin-top:4px">Support Montphu Factory — PayPal: <a href="https://www.paypal.com/paypalme/phuonlinenew" target="_blank">phuonlinenew@gmail.com</a> • PromptPay: <a href="#">0811113693</a> • Made with ❤️ in Thailand | Team B Racing</div>
+</footer>
+
+<script>
+const canvas=document.getElementById('c'), ctx=canvas.getContext('2d');
+const wrap=document.getElementById('gameWrap');
+let W,H,DPR=Math.min(2,window.devicePixelRatio||1);
+function resize(){
+  W=wrap.clientWidth; H=wrap.clientHeight;
+  canvas.width=W*DPR; canvas.height=H*DPR;
+  canvas.style.width=W+'px'; canvas.style.height=H+'px';
+  ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+window.addEventListener('resize',resize); resize();
+
+const distEl=document.getElementById('dist'), spdEl=document.getElementById('spd'), livesEl=document.getElementById('lives');
+const centerMsg=document.getElementById('centerMsg');
+const startScreen=document.getElementById('startScreen'), overScreen=document.getElementById('overScreen');
+
+let game={state:'menu', time:0, dist:0, speed:0, maxSpeed:12, baseSpeed:1.5, lives:3, streak:0, lastSide:null, lastTap:0, mult:1, shake:0, finish:2000};
+let boat={x:0, y:0, w:28, h:86, tilt:0, hitCD:0};
+let river={width:0, left:0, right:0};
+let obstacles=[], particles=[], boosts=[], waves=[];
+let keys={left:false,right:false};
+
+function reset(){
+  game.dist=0; game.speed=game.baseSpeed; game.lives=3; game.streak=0; game.lastSide=null; game.time=0; game.mult=1; game.shake=0;
+  river.width=Math.min(W*0.74, 420); river.left=(W-river.width)/2; river.right=river.left+river.width;
+  boat.x=W/2; boat.y=H*0.62; boat.tilt=0; boat.hitCD=0;
+  obstacles=[]; particles=[]; boosts=[]; waves=[];
+  for(let i=0;i<18;i++) waves.push({x:Math.random()*W, y:Math.random()*H, s:0.2+Math.random()*1.2, a:Math.random()*6});
+  distEl.textContent='0'; livesEl.textContent='3';
+  centerMsg.innerHTML='';
+}
+
+function spawn(){
+  // spawn frequency based on speed
+  let p=0.04 + game.speed*0.008;
+  if(Math.random()<p){
+    let isLog = Math.random()<0.7;
+    let x = river.left + 30 + Math.random()*(river.width-60);
+    if(Math.random()<0.15) x = river.left + (Math.random()<0.5?10:river.width-34); // near bank
+    let y = -120;
+    let type = isLog ? (Math.random()<0.5?'log':'rock') : 'boat';
+    let w = type==='log'? (50+Math.random()*70) : type==='rock'? (26+Math.random()*18) : 32;
+    let h = type==='log'? 18 : type==='rock'? 22 : 72;
+    let spd = 2.5 + Math.random()*1.5 + game.speed*0.5;
+    obstacles.push({x,y,w,h,type,spd, rot: Math.random()*6.28});
+  }
+  if(Math.random()<0.02){
+    let x=river.left+20+Math.random()*(river.width-40);
+    boosts.push({x,y:-40,w:22,h:22,spd:3+game.speed*0.4,taken:false,phase:Math.random()*6});
+  }
+}
+
+function row(side){
+  let now=performance.now();
+  let dt=now-game.lastTap;
+  game.lastTap=now;
+  let perfect = dt>80 && dt<550;
+  let alternate = game.lastSide && game.lastSide!==side;
+  if(!game.lastSide){ alternate=true; perfect=true; }
+  
+  if(alternate){
+    game.streak++;
+    game.mult=Math.min(4, 1 + game.streak*0.15);
+    if(perfect) game.speed=Math.min(game.maxSpeed, game.speed+0.9*game.mult);
+    else game.speed=Math.min(game.maxSpeed, game.speed+0.4*game.mult);
+    boat.tilt = side==='left'? -0.35:0.35;
+    spawnSplash(side);
+    centerMsg.innerHTML = game.streak>3 ? `<div style="color:#FFD23F;font-weight:900;font-size:${14+game.streak}px">${game.streak} STREAK! x${game.mult.toFixed(1)} สุดยอด!</div>` : '';
+    if(game.streak>5) game.shake=6;
+    // haptic
+    if(navigator.vibrate) navigator.vibrate(12);
+  }else{
+    game.streak=Math.max(0,game.streak-2);
+    game.mult=Math.max(1, game.mult*0.8);
+    game.speed=Math.max(game.baseSpeed, game.speed*0.82);
+    boat.tilt *=0.5;
+    centerMsg.innerHTML=`<div style="color:#ff6e6e;font-weight:800">ALTERNATE! สลับข้าง!</div>`;
+    game.shake=8;
+  }
+  game.lastSide=side;
+  setTimeout(()=>{if(centerMsg.innerHTML.includes('ALTERNATE')||centerMsg.innerHTML.includes('STREAK')) centerMsg.innerHTML='';},500);
+}
+
+function spawnSplash(side){
+  for(let i=0;i<6;i++){
+    particles.push({
+      x:boat.x + (side==='left'?-14:14),
+      y:boat.y+30,
+      vx:(side==='left'?-1:1)*(1+Math.random()*3)+ (Math.random()-0.5)*1,
+      vy:2+Math.random()*4,
+      life:0.6+Math.random()*0.4, t:0, s:2+Math.random()*3
+    });
+  }
+}
+
+function update(dt){
+  if(game.state!=='play') return;
+  game.time+=dt;
+  game.speed=Math.max(game.baseSpeed, game.speed - dt*1.8); // decay
+  if(game.speed<2) game.streak=Math.max(0,game.streak- dt*2);
+  game.dist+= game.speed* dt*18;
+  if(game.dist>game.finish) return win();
+  
+  // move boat laterally when keys held + tilt recovery
+  if(keys.left) boat.x-= 240*dt;
+  if(keys.right) boat.x+= 240*dt;
+  boat.x = Math.max(river.left+20, Math.min(river.right-20, boat.x));
+  boat.tilt *= (1- dt*6);
+  boat.hitCD = Math.max(0, boat.hitCD-dt);
+  
+  spawn();
+  
+  // obstacles move
+  for(let o of obstacles){ o.y+=o.spd + game.speed*1.2; o.rot+=dt*1.2; }
+  obstacles = obstacles.filter(o=> o.y < H+140);
+  boosts.forEach(b=>{ b.y+=b.spd + game.speed; b.phase+=dt*4; });
+  boosts = boosts.filter(b=> b.y < H+80 && !b.taken);
+  
+  // waves
+  waves.forEach(w=>{ w.y+= (game.speed*1.2 + w.s)*dt*22; if(w.y>H+10){ w.y=-10; w.x=river.left+Math.random()*river.width;} });
+  
+  // collision
+  for(let o of obstacles){
+    if(boat.hitCD>0) break;
+    if(Math.abs(o.x - boat.x) < (o.w+boat.w)/2 -4 && Math.abs(o.y - boat.y) < (o.h+boat.h)/2 -8){
+      // hit
+      game.lives--;
+      livesEl.textContent=game.lives;
+      game.speed = Math.max(game.baseSpeed, game.speed*0.35);
+      game.streak=0; game.mult=1;
+      boat.hitCD=1.2; game.shake=14;
+      particles.push(...Array(18).fill(0).map(()=>({x:boat.x,y:boat.y,vx:(Math.random()-0.5)*8,vy:(Math.random()-0.5)*8-1,life:0.7,t:0,s:3+Math.random()*4,color:'#ff3'})));
+      if(navigator.vibrate) navigator.vibrate([60,30,60]);
+      centerMsg.innerHTML=`<div style="color:#fff;background:#E53935;padding:4px 10px;border-radius:999px;font-weight:900">CRASH! ชน! -1</div>`;
+      setTimeout(()=>centerMsg.innerHTML='',700);
+      o.y=H+200;
+      if(game.lives<=0) return lose();
+    }
+  }
+  // boost pickup
+  for(let b of boosts){
+    if(Math.abs(b.x-boat.x)< (b.w+boat.w)/2 && Math.abs(b.y-boat.y)< (b.h+boat.h)/2){
+      b.taken=true;
+      game.speed=Math.min(game.maxSpeed, game.speed+2.5);
+      game.streak+=2;
+      distEl.textContent=Math.floor(game.dist);
+      game.dist+=18;
+      particles.push(...Array(10).fill(0).map(()=>({x:b.x,y:b.y,vx:(Math.random()-0.5)*5,vy:(Math.random()-0.5)*5,life:0.9,t:0,s:4,color:'#FFD23F'})));
+    }
+  }
+  
+  // particles
+  particles.forEach(p=>{ p.t+=dt; p.x+=p.vx; p.y+=p.vy; p.vy+=dt*8; });
+  particles = particles.filter(p=> p.t < p.life);
+  
+  distEl.textContent=Math.floor(game.dist);
+  spdEl.textContent=game.speed.toFixed(1);
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  ctx.save();
+  if(game.shake>0){ ctx.translate((Math.random()-0.5)*game.shake, (Math.random()-0.5)*game.shake); game.shake*=0.92; if(game.shake<0.2) game.shake=0; }
+  // banks
+  ctx.fillStyle='#2E7D32'; ctx.fillRect(0,0,river.left,H);
+  ctx.fillStyle='#1B5E20'; ctx.fillRect(river.right,0,W-river.right,H);
+  // crowd pattern
+  ctx.fillStyle='rgba(255,255,255,.18)';
+  for(let y=0;y<H;y+=22){
+    for(let x=0;x<river.left;x+=18){ if((x+y)%40<12) ctx.fillRect(x+ (Math.sin(y*0.05+game.time*2)%8), y, 6, 8); }
+    for(let x=river.right;x<W;x+=18){ if((x+y)%38<12) ctx.fillRect(x+ (Math.cos(y*0.05+game.time*2)%8), y, 6, 8); }
+  }
+  // river
+  let grad=ctx.createLinearGradient(river.left,0,river.right,0);
+  grad.addColorStop(0,'#0D47A1'); grad.addColorStop(0.5,'#1976D2'); grad.addColorStop(1,'#0D47A1');
+  ctx.fillStyle=grad; ctx.fillRect(river.left,0,river.width,H);
+  // Thai flags bunting
+  ctx.fillStyle='#FFD23F'; for(let y=0;y<H;y+=120){ for(let i=0;i<6;i++){ let bx=river.left- i*10 - (y%20); ctx.fillRect(bx, y+ Math.sin(y*0.01+i)*6, 12, 7);} }
+  // lane lines
+  ctx.strokeStyle='rgba(255,255,255,.22)'; ctx.setLineDash([18,18]); ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(W/2, -100+(game.time*80)%80); ctx.lineTo(W/2, H+100); ctx.stroke(); ctx.setLineDash([]);
+  // waves
+  ctx.fillStyle='rgba(255,255,255,.55)';
+  waves.forEach(w=>{ ctx.beginPath(); ctx.ellipse(w.x,w.y, 10*w.s, 3*w.s, 0,0,6.28); ctx.fill(); });
+  // finish line
+  let finishY = H - (game.finish - game.dist)*2.2; // approaches
+  if(finishY> -20 && finishY < H+20){
+    ctx.fillStyle='repeating-linear-gradient pattern';
+    ctx.fillStyle='#fff'; ctx.fillRect(river.left, finishY, river.width, 10);
+    ctx.fillStyle='#000'; for(let x=river.left;x<river.right;x+=20){ ctx.fillRect(x, finishY,10,10); }
+    ctx.fillStyle='#FFD23F'; ctx.font='bold 18px system-ui'; ctx.fillText('🏁 WAT FINISH วัดเส้นชัย 🏁', river.left+10, finishY-8);
+  }
+  
+  // boosts
+  boosts.forEach(b=>{
+    ctx.save(); ctx.translate(b.x,b.y); ctx.rotate(Math.sin(b.phase)*0.3);
+    ctx.font='20px serif'; ctx.textAlign='center'; ctx.fillText('🪷',0,6);
+    ctx.fillStyle='rgba(255,210,63,.9)'; ctx.beginPath(); ctx.arc(0,0,16,0,6.28); ctx.strokeStyle='#FFD23F'; ctx.lineWidth=2; ctx.stroke();
+    ctx.restore();
+  });
+  // obstacles
+  obstacles.forEach(o=>{
+    ctx.save(); ctx.translate(o.x,o.y); ctx.rotate(o.rot*0.2);
+    if(o.type==='log'){ ctx.fillStyle='#5D4037'; ctx.fillRect(-o.w/2,-o.h/2,o.w,o.h); ctx.fillStyle='#8D6E63'; ctx.fillRect(-o.w/2+3,-o.h/2+3,o.w-6,4); }
+    else if(o.type==='rock'){ ctx.fillStyle='#455A64'; ctx.beginPath(); ctx.ellipse(0,0,o.w/2,o.h/2,0,0,6.28); ctx.fill(); ctx.fillStyle='#78909C'; ctx.beginPath(); ctx.arc(-3,-3,5,0,6.28); ctx.fill(); }
+    else { // enemy boat
+      ctx.fillStyle='#E53935'; ctx.fillRect(-o.w/2,-o.h/2,o.w,o.h); ctx.fillStyle='#FFCDD2'; ctx.fillRect(-o.w/2+4,-o.h/2+10,o.w-8,8); ctx.fillStyle='#3E2723'; ctx.fillRect(-4,o.h/2,8,12);
+    }
+    ctx.restore();
+  });
+  
+  // boat
+  ctx.save(); ctx.translate(boat.x,boat.y); ctx.rotate(boat.tilt);
+  if(boat.hitCD>0){ ctx.globalAlpha= 0.5+ Math.sin(game.time*18)*0.4; }
+  // shadow
+  ctx.fillStyle='rgba(0,0,0,.35)'; ctx.beginPath(); ctx.ellipse(0,22,18,8,0,0,6.28); ctx.fill();
+  // hull long-tail
+  ctx.fillStyle='#4E342E'; ctx.fillRect(-4, boat.h/2, 8, 28); // tail
+  ctx.fillStyle='#FF3D00'; ctx.beginPath(); ctx.ellipse(6, boat.h/2+28, 5,7,0,0,6.28); ctx.fill(); // engine
+  // main hull
+  ctx.fillStyle='#FFD23F'; ctx.beginPath();
+  ctx.moveTo(0,-boat.h/2-6); ctx.lineTo(12, boat.h/2-6); ctx.lineTo(0, boat.h/2); ctx.lineTo(-12, boat.h/2-6); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle='#3E2723'; ctx.lineWidth=2; ctx.stroke();
+  // seats
+  ctx.fillStyle='#795548'; ctx.fillRect(-8,-18,16,4); ctx.fillRect(-9,8,18,4);
+  // rower
+  ctx.fillStyle='#FFCC80'; ctx.beginPath(); ctx.arc(0,-6,7,0,6.28); ctx.fill();
+  ctx.fillStyle='#0D47A1'; ctx.fillRect(-6,-2,12,16);
+  // oars
+  ctx.strokeStyle='#3E2723'; ctx.lineWidth=3; 
+  ctx.beginPath(); ctx.moveTo(-10,0); ctx.lineTo(-24+ (game.lastSide==='left'?-10:0), 18); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(10,0); ctx.lineTo(24+ (game.lastSide==='right'?10:0), 18); ctx.stroke();
+  // speed aura
+  if(game.speed>6){ ctx.strokeStyle=`rgba(255,210,63,${(game.speed-6)/6})`; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(0,0, 20+game.speed*2,0,6.28); ctx.stroke(); }
+  ctx.restore();
+  
+  // particles
+  particles.forEach(p=>{
+    let a=1- p.t/p.life;
+    ctx.globalAlpha=a;
+    ctx.fillStyle=p.color||'#fff';
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.s*a,0,6.28); ctx.fill();
+  });
+  ctx.globalAlpha=1;
+  ctx.restore();
+  
+  // progress bar
+  let prog= Math.min(1, game.dist/game.finish);
+  ctx.fillStyle='rgba(0,0,0,.45)'; ctx.fillRect(W/2-90, 12, 180,10);
+  ctx.fillStyle='#FFD23F'; ctx.fillRect(W/2-90,12, 180*prog,10);
+  ctx.fillStyle='#fff'; ctx.font='bold 10px system-ui'; ctx.textAlign='center'; ctx.fillText(`${Math.floor(prog*100)}% TO WAT`, W/2, 20);
+}
+
+let last=0;
+function loop(t){
+  if(!last) last=t;
+  let dt=Math.min(0.033, (t-last)/1000); last=t;
+  update(dt); draw();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+// input
+function pressLeft(){ if(game.state!=='play') return; if(keys.left) return; row('left'); }
+function pressRight(){ if(game.state!=='play') return; if(keys.right) return; row('right'); }
+
+document.getElementById('leftBtn').addEventListener('touchstart', e=>{e.preventDefault();pressLeft(); keys.left=true;});
+document.getElementById('leftBtn').addEventListener('touchend', ()=>keys.left=false);
+document.getElementById('leftBtn').addEventListener('mousedown', ()=>{pressLeft(); keys.left=true;});
+document.getElementById('leftBtn').addEventListener('mouseup', ()=>keys.left=false);
+document.getElementById('rightBtn').addEventListener('touchstart', e=>{e.preventDefault();pressRight(); keys.right=true;});
+document.getElementById('rightBtn').addEventListener('touchend', ()=>keys.right=false);
+document.getElementById('rightBtn').addEventListener('mousedown', ()=>{pressRight(); keys.right=true;});
+document.getElementById('rightBtn').addEventListener('mouseup', ()=>keys.right=false);
+
+window.addEventListener('keydown', e=>{
+  if(e.repeat) return;
+  if(e.key==='ArrowLeft' || e.key==='a' || e.key==='A' || e.key==='z' || e.key==='Z'){ pressLeft(); keys.left=true; }
+  if(e.key==='ArrowRight' || e.key==='d' || e.key==='D' || e.key==='x' || e.key==='X'){ pressRight(); keys.right=true; }
+});
+window.addEventListener('keyup', e=>{
+  if(e.key==='ArrowLeft' || e.key==='a' || e.key==='A' || e.key==='z' || e.key==='Z') keys.left=false;
+  if(e.key==='ArrowRight' || e.key==='d' || e.key==='D' || e.key==='x' || e.key==='X') keys.right=false;
+});
+
+function startGame(){
+  reset(); game.state='play'; startScreen.style.display='none'; overScreen.style.display='none';
+}
+function win(){
+  game.state='over';
+  let time=game.time.toFixed(1);
+  let rank= game.time<32?'CHAMPION! แชมป์!': game.time<45?'Warrior นักสู้':'Rookie มือใหม่ แต่สู้ต่อ!';
+  document.getElementById('overTitle').textContent='🏆 FINISH! เข้าเส้นชัย!';
+  document.getElementById('overStats').innerHTML=`Time: ${time}s • Avg Speed ${(game.dist/game.time/18).toFixed(1)}<br>Rank: ${rank}`;
+  document.getElementById('overMsg').textContent='Festival crowd is cheering! กองเชียร์เฮ! You raced the long-tail through Kwai River!';
+  document.getElementById('shareText').textContent=`${time}s at Long Boat Race`;
+  overScreen.style.display='flex';
+}
+function lose(){
+  game.state='over';
+  document.getElementById('overTitle').textContent='💥 SUNK! เรือล่ม!';
+  document.getElementById('overStats').innerHTML=`Distance: ${Math.floor(game.dist)}m / ${game.finish}m<br>Best Streak: ${game.streak}`;
+  document.getElementById('overMsg').textContent='Too many crashes! Avoid logs next time. หลบขอนไม้หน่อย!';
+  document.getElementById('shareText').textContent=`${Math.floor(game.dist)}m at Long Boat Race`;
+  overScreen.style.display='flex';
+}
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+</script>
+</body>
+</html>

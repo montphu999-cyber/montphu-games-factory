@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Somtam Puzzle - แซ่บ Thai Match-3 | Montphu Factory Team B</title>
+<style>
+:root{--bg:#0d1021;--card:#191d36;--lime:#b8ff3d;--chili:#ff2e63;--papaya:#ffb338;--peanut:#e8c39e;--tomato:#ff5a3c;--ink:#fff;--muted:#9aa0c3;--grid:#1e2346}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:radial-gradient(120% 120% at 50% 0%,#1d2550 0%,#0d1021 60%);color:var(--ink);font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif;min-height:100dvh;display:flex;flex-direction:column;align-items:center;overflow-x:hidden}
+.topbar{width:100%;max-width:480px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;letter-spacing:-.02em;font-size:22px;line-height:1}
+.logo span{color:var(--lime)}
+.tag{font-size:10px;background:var(--chili);padding:2px 6px;border-radius:99px;margin-left:6px;vertical-align:super}
+.stats{width:100%;max-width:480px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 12px}
+.stat{background:var(--card);border:1px solid #2a315f;border-radius:14px;padding:8px 10px;text-align:center}
+.stat b{display:block;font-size:18px;color:var(--lime)}
+.stat i{font-style:normal;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.recipe-bar{width:100%;max-width:480px;margin:10px 12px 0;background:var(--card);border:1px solid #2a315f;border-radius:14px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:6px}
+.rlabel{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.ingredients{display:flex;gap:4px}
+.ing{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;font-size:16px;background:var(--grid);border:1px solid #2b356a;transition:.2s}
+.ing.got{background:#102a18;border-color:var(--lime);transform:scale(1.1)}
+.ing.bonus{animation:pop .35s}
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.35)}100%{transform:scale(1.1)}}
+.board-wrap{width:100%;max-width:480px;padding:12px}
+.board{background:var(--card);border:1px solid #2a315f;border-radius:20px;padding:10px;box-shadow:0 20px 40px #0006, inset 0 0 0 1px #ffffff0a}
+.grid{display:grid;grid-template-columns:repeat(8,1fr);gap:4px;touch-action:none;user-select:none}
+.cell{aspect-ratio:1;border-radius:12px;background:var(--grid);display:grid;place-items:center;font-size:22px;cursor:pointer;position:relative;transition:transform .12s, filter .12s, background .15s;border:1px solid #28306a}
+.cell.selected{outline:2px solid var(--lime);transform:scale(.92);z-index:2;filter:brightness(1.3)}
+.cell.matched{animation:clear .35s forwards}
+@keyframes clear{0%{transform:scale(1)}40%{transform:scale(1.2);filter:brightness(1.5)}100%{transform:scale(0);opacity:0}}
+.cell.hint{animation:hintPulse 1s infinite}
+@keyframes hintPulse{0%,100%{box-shadow:0 0 0 0 #b8ff3d66}50%{box-shadow:0 0 0 8px #b8ff3d00}}
+.controls{width:100%;max-width:480px;display:flex;gap:8px;padding:0 12px 12px}
+.btn{flex:1;background:#2a3266;color:#fff;border:1px solid #3a467f;border-radius:14px;padding:12px;font-weight:700;font-size:14px;cursor:pointer}
+.btn.primary{background:var(--lime);color:#101328;border-color:var(--lime);font-weight:900}
+.btn:active{transform:scale(.97)}
+.combo-popup{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;font-weight:900;font-size:28px;color:var(--lime);text-shadow:0 2px 0 #000,0 0 18px var(--lime);animation:comboUp .7s forwards}
+@keyframes comboUp{0%{transform:translateY(10px) scale(.8);opacity:0}20%{opacity:1}100%{transform:translateY(-40px) scale(1.2);opacity:0}}
+.overlay{position:fixed;inset:0;background:#0d1021e6;backdrop-filter:blur(10px);display:none;place-items:center;z-index:50;padding:20px}
+.overlay.show{display:grid}
+.modal{background:#171b38;border:1px solid #313a78;border-radius:24px;padding:22px;max-width:380px;width:100%;text-align:center;box-shadow:0 30px 80px #000a}
+.modal h2{font-size:30px;margin-bottom:6px}
+.modal p{color:var(--muted);font-size:14px;line-height:1.5;margin-bottom:14px}
+.meter{height:8px;background:#232a5a;border-radius:99px;overflow:hidden;margin:8px 0}
+.meter span{display:block;height:100%;background:linear-gradient(90deg,var(--chili),var(--papaya),var(--lime));transition:width .2s}
+.footer{width:100%;max-width:480px;padding:14px 12px 24px;display:grid;gap:10px}
+.ads{background:linear-gradient(90deg,#1a2048,#242d66);border:1px dashed #3d4a9a;border-radius:12px;padding:10px;text-align:center;color:#6a74b3;font-size:11px;letter-spacing:.12em;text-transform:uppercase}
+.donate{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.donate a, .donate div{background:var(--card);border:1px solid #2a315f;border-radius:12px;padding:10px;text-align:center;font-size:12px;color:var(--muted);text-decoration:none}
+.donate b{display:block;color:var(--ink);font-size:13px;margin-bottom:2px}
+.small{font-size:10px;color:#5f6999;text-align:center;padding-bottom:8px}
+</style>
+</head>
+<body>
+<div class="topbar">
+<div class="logo">SOMTAM <span>PUZZLE</span> <span class="tag">TEAM B • BRAIN</span></div>
+<div style="font-size:12px;color:var(--muted)">ส้มตำแซ่บ</div>
+</div>
+
+<div class="stats">
+<div class="stat"><i>Score</i><b id="score">0</b></div>
+<div class="stat"><i>Time</i><b id="time">60</b></div>
+<div class="stat"><i>Best</i><b id="best">0</b></div>
+</div>
+
+<div class="recipe-bar">
+<div class="rlabel">Perfect Somtam Recipe → +250 bonus</div>
+<div class="ingredients" id="recipe">
+<div class="ing" data-k="P">🥭</div>
+<div class="ing" data-k="C">🌶️</div>
+<div class="ing" data-k="L">🍋</div>
+<div class="ing" data-k="N">🥜</div>
+<div class="ing" data-k="T">🍅</div>
+</div>
+</div>
+
+<div class="board-wrap">
+<div class="board">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+<span style="font-size:11px;color:var(--muted);letter-spacing:.08em">SWAP TO MATCH 3 • BRAIN TEASER</span>
+<div class="meter" style="width:120px;margin:0"><span id="timeBar" style="width:100%"></span></div>
+</div>
+<div class="grid" id="grid"></div>
+</div>
+</div>
+
+<div class="controls">
+<button class="btn" id="hintBtn">💡 HINT (-20)</button>
+<button class="btn primary" id="startBtn">▶ PLAY แซ่บ!</button>
+</div>
+
+<div class="footer">
+<div class="ads">AdSense Placeholder — ins class="adsbygoogle" data-ad-slot="SOMTAM-BANNER" </div>
+<div class="donate">
+<a href="https://www.paypal.com/paypalme/phuonlinenew@gmail.com" target="_blank"><b>💙 PayPal Donate</b>phuonlinenew@gmail.com</a>
+<div><b>🇹🇭 PromptPay</b>0811113693<br><span style="font-size:10px">Montphu Factory</span></div>
+</div>
+<div class="small">Montphu Games Factory • Team B • Brain Teaser • No Cozy, Pure Logic • 80% EN / 20% THA flavor • Made with 💚 in Bangkok</div>
+</div>
+
+<div class="overlay" id="overlay">
+<div class="modal">
+<h2 id="overTitle">PROMPT TAM! 🎉</h2>
+<p id="overDesc">You made <b id="overScore">0</b> points in 60 seconds.<br>Perfect Somtam x<span id="overSomtam">0</span> • Best combo x<span id="overCombo">0</span></p>
+<div style="display:flex;gap:8px">
+<button class="btn primary" id="restartBtn" style="flex:1">AGAIN! อีกครั้ง</button>
+<button class="btn" id="shareBtn">SHARE</button>
+</div>
+<p style="margin-top:12px">Tip: Collect 🥭🌶️🍋🥜🍅 in one chain for <b style="color:var(--lime)">Somtam Bonus +250!</b><br>Long chains = brain power!</p>
+</div>
+</div>
+
+<script>
+const EMOJI={P:'🥭',C:'🌶️',L:'🍋',N:'🥜',T:'🍅',G:'🧄'};
+const TYPES=Object.keys(EMOJI);
+const SIZE=8, DURATION=60;
+let grid=[], score=0, timeLeft=DURATION, timer=null, playing=false, selected=null, locked=false, combo=0, bestCombo=0, best=+localStorage.getItem('somtam_best')||0, somtamCount=0, recipeSet=new Set();
+const $=s=>document.getElementById(s);
+$('best').textContent=best;
+
+function randType(exclude=[]){
+  let t; do{t=TYPES[Math.floor(Math.random()*TYPES.length)]}while(exclude.includes(t)); return t;
+}
+function makeGrid(){
+  grid=Array(SIZE).fill(0).map(()=>Array(SIZE).fill(0).map(()=>randType()));
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    let forbid=[];
+    if(c>=2 && grid[r][c-1]===grid[r][c-2]) forbid.push(grid[r][c-1]);
+    if(r>=2 && grid[r-1][c]===grid[r-2][c]) forbid.push(grid[r-1][c]);
+    if(forbid.length) grid[r][c]=randType(forbid);
+  }
+}
+function render(){
+  const g=$('grid'); g.innerHTML='';
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const cell=document.createElement('div'); cell.className='cell'; cell.dataset.r=r; cell.dataset.c=c;
+    cell.textContent=EMOJI[grid[r][c]];
+    if(selected && selected.r==r && selected.c==c) cell.classList.add('selected');
+    cell.addEventListener('click',()=>tap(r,c));
+    g.appendChild(cell);
+  }
+}
+function tap(r,c){
+  if(!playing || locked) return;
+  if(!selected){ selected={r,c}; render(); return; }
+  const dr=Math.abs(r-selected.r), dc=Math.abs(c-selected.c);
+  if((dr===1 && dc===0)||(dc===1 && dr===0)){
+    swapAttempt(selected.r,selected.c,r,c);
+  } else { selected={r,c}; render(); }
+}
+async function swapAttempt(r1,c1,r2,c2){
+  locked=true;
+  [grid[r1][c1],grid[r2][c2]]=[grid[r2][c2],grid[r1][c1]];
+  render();
+  let matches=findMatches();
+  if(matches.length===0){
+    await new Promise(res=>setTimeout(res,180));
+    [grid[r1][c1],grid[r2][c2]]=[grid[r2][c2],grid[r1][c1]];
+    selected=null; render(); locked=false; return;
+  }
+  selected=null;
+  let chain=0;
+  while(matches.length){
+    chain++;
+    combo=Math.max(combo,chain);
+    bestCombo=Math.max(bestCombo,chain);
+    await clearMatches(matches,chain);
+    await applyGravity();
+    await new Promise(res=>setTimeout(res,80));
+    matches=findMatches();
+  }
+  locked=false;
+}
+function findMatches(){
+  const matched=new Set();
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE-2;c++){
+    const t=grid[r][c]; if(!t) continue;
+    if(grid[r][c+1]===t && grid[r][c+2]===t){
+      let k=c; while(k<SIZE && grid[r][k]===t){ matched.add(r+','+k); k++; }
+    }
+  }
+  for(let c=0;c<SIZE;c++)for(let r=0;r<SIZE-2;r++){
+    const t=grid[r][c]; if(!t) continue;
+    if(grid[r+1][c]===t && grid[r+2][c]===t){
+      let k=r; while(k<SIZE && grid[k][c]===t){ matched.add(k+','+c); k++; }
+    }
+  }
+  return [...matched].map(s=>{const [r,c]=s.split(',').map(Number); return {r,c,type:grid[r][c]}} );
+}
+async function clearMatches(matches,chain){
+  const count=matches.length;
+  const base = count>=5? count*25 : count>=4? count*18 : count*10;
+  const chainBonus = chain>1 ? (chain-1)*40 : 0;
+  score+= base + chainBonus;
+  $('score').textContent=score;
+  if(score>best){ best=score; localStorage.setItem('somtam_best',best); $('best').textContent=best; }
+
+  // recipe progress
+  matches.forEach(m=>{ recipeSet.add(m.type); });
+  updateRecipe();
+  if(['P','C','L','N','T'].every(k=>recipeSet.has(k))){
+    score+=250; somtamCount++; recipeSet.clear();
+    $('score').textContent=score;
+    setTimeout(()=>{ document.querySelectorAll('#recipe .ing').forEach(el=>{el.classList.remove('got'); el.classList.add('bonus'); setTimeout(()=>el.classList.remove('bonus'),300)}); },50);
+    popup('SOMTAM PERFECT! +250');
+  }
+
+  // visual
+  matches.forEach(m=>{
+    const idx=m.r*SIZE+m.c; const el=$('grid').children[idx]; if(el) el.classList.add('matched');
+  });
+  if(chain>1) popup(`COMBO x${chain}!`);
+  await new Promise(res=>setTimeout(res,320));
+}
+function popup(txt){
+  const b=$('grid'); const d=document.createElement('div'); d.className='combo-popup'; d.textContent=txt; b.style.position='relative'; b.appendChild(d); setTimeout(()=>d.remove(),700);
+}
+function updateRecipe(){
+  document.querySelectorAll('#recipe .ing').forEach(el=>{
+    const k=el.dataset.k; if(recipeSet.has(k)) el.classList.add('got'); else el.classList.remove('got');
+  });
+}
+async function applyGravity(){
+  for(let c=0;c<SIZE;c++){
+    let write=SIZE-1;
+    for(let r=SIZE-1;r>=0;r--){
+      if(grid[r][c]){ grid[write][c]=grid[r][c]; if(write!==r) grid[r][c]=null; write--; }
+    }
+    for(let r=write;r>=0;r--) grid[r][c]=randType();
+  }
+  render();
+  await new Promise(r=>setTimeout(r,90));
+}
+function findHint(){
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    for(let [dr,dc] of [[1,0],[0,1]]){
+      let r2=r+dr,c2=c+dc; if(r2>=SIZE||c2>=SIZE) continue;
+      [grid[r][c],grid[r2][c2]]=[grid[r2][c2],grid[r][c]];
+      if(findMatches().length>0){ [grid[r][c],grid[r2][c2]]=[grid[r2][c2],grid[r][c]]; return [{r,c},{r:r2,c:c2}]; }
+      [grid[r][c],grid[r2][c2]]=[grid[r2][c2],grid[r][c]];
+    }
+  }
+  return null;
+}
+function tick(){
+  timeLeft--; $('time').textContent=timeLeft; $('timeBar').style.width=(timeLeft/DURATION*100)+'%';
+  if(timeLeft<=10) $('timeBar').style.background='var(--chili)';
+  if(timeLeft<=0){ endGame(); }
+}
+function startGame(){
+  makeGrid(); while(findMatches().length>0){ makeGrid(); }
+  score=0; timeLeft=DURATION; combo=0; recipeSet.clear(); somtamCount=0; bestCombo=0;
+  $('score').textContent=0; $('time').textContent=DURATION; $('timeBar').style.width='100%'; $('timeBar').style.background=''; updateRecipe(); render();
+  playing=true; locked=false;
+  $('overlay').classList.remove('show');
+  clearInterval(timer); timer=setInterval(tick,1000);
+  $('startBtn').textContent='↻ RESTART';
+}
+function endGame(){
+  playing=false; clearInterval(timer);
+  $('overScore').textContent=score; $('overSomtam').textContent=somtamCount; $('overCombo').textContent=bestCombo||1;
+  $('overTitle').textContent = score>800? 'เซียนส้มตำ! LEGEND!' : score>400? 'แซ่บมาก! NICE!' : 'หมดเวลา TIME UP!';
+  $('overlay').classList.add('show');
+}
+
+$('startBtn').addEventListener('click',startGame);
+$('restartBtn').addEventListener('click',startGame);
+$('hintBtn').addEventListener('click',()=>{
+  if(!playing) return;
+  const h=findHint();
+  if(!h){ popup('No moves - reshuffle!'); makeGrid(); render(); return; }
+  score=Math.max(0,score-20); $('score').textContent=score;
+  const g=$('grid');
+  h.forEach(p=>{ const el=g.children[p.r*SIZE+p.c]; el.classList.add('hint'); setTimeout(()=>el.classList.remove('hint'),1100); });
+});
+$('shareBtn').addEventListener('click',()=>{
+  const txt=`I scored ${score} in Somtam Puzzle! 🥭🌶️ Can you beat me? #MontphuFactory`;
+  if(navigator.share) navigator.share({title:'Somtam Puzzle',text:txt,url:location.href});
+  else { navigator.clipboard.writeText(txt+' '+location.href); popup('Copied!'); }
+});
+
+// drag swap for mobile
+let dragStart=null;
+$('grid').addEventListener('touchstart',e=>{
+  const t=e.target.closest('.cell'); if(!t) return; dragStart={r:+t.dataset.r,c:+t.dataset.c, x:e.touches[0].clientX, y:e.touches[0].clientY};
+},{passive:true});
+$('grid').addEventListener('touchend',e=>{
+  if(!dragStart) return;
+  const dx=e.changedTouches[0].clientX-dragStart.x, dy=e.changedTouches[0].clientY-dragStart.y;
+  if(Math.hypot(dx,dy)<18) return;
+  const absX=Math.abs(dx), absY=Math.abs(dy);
+  let r2=dragStart.r, c2=dragStart.c;
+  if(absX>absY) c2+= dx>0?1:-1; else r2+= dy>0?1:-1;
+  if(r2>=0&&r2<SIZE&&c2>=0&&c2<SIZE) swapAttempt(dragStart.r,dragStart.c,r2,c2);
+  dragStart=null;
+},{passive:true});
+
+// initial
+makeGrid(); render(); updateRecipe();
+</script>
+</body>
+</html>

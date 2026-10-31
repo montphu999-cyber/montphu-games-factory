@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lottery Scratch Thai - สลากไทย | Montphu Factory</title>
+<style>
+:root{
+--gold:#FFD700;--red:#D90429;--dark:#0f0f12;--card:#1c1c22;--green:#00c853;
+--pink:#ff2d75;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:#0f0f12;color:#fff;font-family:Inter,system-ui,Segoe UI,Roboto,sans-serif;overflow-x:hidden;min-height:100vh}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#15151b;border-bottom:1px solid #2a2a35;position:sticky;top:0;z-index:20}
+.brand{font-weight:900;letter-spacing:.5px;line-height:1}
+.brand small{display:block;font-weight:400;opacity:.6;font-size:10px;letter-spacing:1px}
+.wallet{display:flex;gap:10px;align-items:center}
+.pill{background:#1f1f2a;border:1px solid #2d2d3a;border-radius:999px;padding:6px 12px;font-weight:800;font-size:13px}
+.pill.gold{color:var(--gold);border-color:#4a3d00}
+.pill.win{color:var(--green)}
+.hero{text-align:center;padding:18px 14px 6px}
+.hero h1{font-size:28px;line-height:1;font-weight:900;text-transform:uppercase}
+.hero h1 span{color:var(--gold)}.hero h1 em{color:var(--red);font-style:normal}
+.sub{opacity:.7;font-size:12px;margin-top:6px;letter-spacing:.3px}
+.tier-rail{display:flex;gap:10px;overflow:auto;padding:12px 14px;scrollbar-width:none}
+.tier-rail::-webkit-scrollbar{display:none}
+.tier{flex:0 0 132px;background:linear-gradient(180deg,#23232f,#171720);border:1px solid #2e2e3e;border-radius:16px;padding:10px;cursor:pointer;transition:.15s;position:relative}
+.tier.active{border-color:var(--gold);box-shadow:0 0 0 2px #ffd70033,0 8px 24px #0008}
+.tier b{display:block;font-size:13px}.tier .price{font-size:18px;font-weight:900;color:var(--gold);margin:2px 0}
+.tier .odds{font-size:10px;opacity:.6}.tier .winmax{font-size:11px;color:#7CFF8E;font-weight:700}
+.badge{position:absolute;top:-8px;right:-6px;background:var(--red);font-size:9px;font-weight:900;padding:3px 6px;border-radius:999px;transform:rotate(8deg)}
+
+.board{display:grid;place-items:center;padding:10px 14px 110px}
+.ticket-wrap{width:100%;max-width:360px;position:relative}
+.ticket{background:radial-gradient(120% 120% at 10% 10%,#fffbe6 0%,#ffeaa7 18%,#ffcf7a 40%,#ffb347 72%);border-radius:20px;padding:14px 14px 12px;color:#2b1a00;box-shadow:0 12px 40px #0008, inset 0 1px 0 #fff8;overflow:hidden;position:relative}
+.ticket::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,#0000 0 12px,#00000006 12px 24px);pointer-events:none}
+.ticket-head{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:12px;letter-spacing:.8px;opacity:.85}
+.ticket-head .gov{font-size:11px;background:#2b1a00;color:#ffeaa7;padding:3px 8px;border-radius:999px}
+.lotto-grid{margin:10px 0 8px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.cell{background:#fff7;border:1px dashed #7a4b0033;border-radius:12px;padding:8px 10px;position:relative;min-height:58px}
+.cell label{font-size:9px;letter-spacing:.8px;opacity:.6;font-weight:800;display:block}
+.cell .num{font-size:20px;font-weight:900;letter-spacing:.5px;margin-top:2px}
+.scratch-area{position:relative;margin-top:8px;background:#fff;border-radius:16px;padding:10px;border:2px solid #2b1a0014}
+.scratch-area h3{font-size:11px;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:8px;text-align:center}
+.scratch-canvas-wrap{position:relative;width:100%;aspect-ratio: 1.6 / 1;background:#faf6e9;border-radius:12px;overflow:hidden}
+.scratch-canvas-wrap canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.scratch-canvas-wrap .under{position:absolute;inset:0;display:grid;place-items:center;padding:8px}
+.under .big-num{font-size:36px;font-weight:900;letter-spacing:2px}
+.under .prize{margin-top:4px;font-weight:900;font-size:14px}
+.under .lose{opacity:.8;font-weight:700}
+.progress{height:6px;background:#00000014;border-radius:999px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--gold),var(--red));transition:.1s}
+.actions{display:flex;gap:8px;margin-top:12px}
+.btn{flex:1;border:0;border-radius:14px;padding:12px 14px;font-weight:900;letter-spacing:.4px;cursor:pointer;font-size:13px;text-transform:uppercase}
+.btn-primary{background:linear-gradient(180deg,#FFE27A,#FFB800);color:#2b1a00;box-shadow:0 6px 18px #ffb80044}
+.btn-ghost{background:#1f1f2a;border:1px solid #2f2f3f;color:#fff}
+.btn:disabled{opacity:.4;pointer-events:none}
+.stats{display:flex;gap:8px;justify-content:center;margin:14px 14px 0;flex-wrap:wrap}
+.stat{background:#191921;border:1px solid #2a2a36;border-radius:12px;padding:8px 12px;font-size:11px;text-align:center;min-width:98px}
+.stat b{display:block;font-size:16px;margin-top:2px}
+.meter{display:flex;gap:2px;justify-content:center;margin-top:4px}
+.meter span{width:8px;height:8px;border-radius:999px;background:#2a2a36}.meter span.on{background:var(--green)}
+
+.footer-ad{margin:18px auto 0;max-width:360px;background:#111119;border:1px dashed #2e2e42;border-radius:12px;padding:10px;text-align:center;font-size:11px;opacity:.7}
+.support{display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap}
+.support a{font-size:11px;color:#aaa;text-decoration:none;border:1px solid #2a2a35;padding:6px 10px;border-radius:999px}
+.support a:hover{color:#fff;border-color:#444}
+
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%) translateY(20px);background:#1f1f2a;border:1px solid #36364a;color:#fff;padding:10px 14px;border-radius:999px;font-weight:800;font-size:13px;opacity:0;pointer-events:none;transition:.25s;z-index:50;white-space:nowrap}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+
+.popup{position:fixed;inset:0;background:#0009;backdrop-filter:blur(8px);display:none;place-items:center;z-index:40;padding:16px}
+.popup.open{display:grid}
+.popup-card{width:100%;max-width:360px;background:#1a1a24;border:1px solid #2f2f3d;border-radius:22px;padding:18px;text-align:center;box-shadow:0 20px 60px #000a;animation:pop .3s ease}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.popup-card h2{font-size:26px;font-weight:900}.popup-card p{opacity:.7;font-size:13px;margin:8px 0 14px;line-height:1.4}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden}
+
+.naga{position:absolute;right:-12px;bottom:-18px;font-size:52px;opacity:.16;transform:rotate(-12deg)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">LOTTERY SCRATCH THAI <small>MONTPhU FACTORY • TEAM B • 05</small></div>
+  <div class="wallet">
+    <div class="pill gold" id="bal">฿ 1,000</div>
+    <div class="pill" id="tix">0 tickets</div>
+  </div>
+</div>
+
+<div class="hero">
+  <h1><span>ขูด</span> <em>รวย</em> Thai Lotto <span>Scratch</span></h1>
+  <div class="sub">Scratch 90% LOSE • 10% WIN • Temple lucky numbers ✨ นาคาให้โชค • Realistic Thai Govt Lottery odds</div>
+</div>
+
+<div class="tier-rail" id="tierRail"></div>
+
+<div class="board">
+  <div class="ticket-wrap">
+    <div class="ticket" id="ticket">
+      <div class="ticket-head"><span>สลากกินแบ่ง GOV LOTTERY</span><span class="gov">งวด 01 มิ.ย.</span></div>
+
+      <div class="lotto-grid">
+        <div class="cell"><label>YOUR 6-DIGIT</label><div class="num" id="yourNum">------</div><div style="font-size:9px;opacity:.5">เลขของคุณ เลขเด็ด</div></div>
+        <div class="cell"><label>WINNING DRAW วินนิ่ง</label><div class="num" id="winNum">??????</div><div style="font-size:9px;opacity:.5">ผลสลาก</div></div>
+      </div>
+
+      <div class="scratch-area">
+        <h3>👇 ขูดตรงนี้ Scratch to reveal ดวง 💫</h3>
+        <div class="scratch-canvas-wrap" id="wrap">
+          <div class="under" id="under">
+            <div style="text-align:center">
+              <div class="big-num" id="revealNum">??????</div>
+              <div class="prize" id="revealPrize">Scratch 80% to reveal</div>
+            </div>
+          </div>
+          <canvas id="scratch" width="600" height="375"></canvas>
+        </div>
+        <div class="progress"><i id="prog"></i></div>
+        <div class="actions">
+          <button class="btn btn-primary" id="buyBtn">Buy Ticket ฿</button>
+          <button class="btn btn-ghost" id="autoBtn">Quick Scratch</button>
+        </div>
+        <div class="naga">🐍</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">Total Wins<div class="meter" id="luckMeter"></div><b id="winCnt">0</b></div>
+      <div class="stat">Biggest Win<b id="bigWin">฿0</b></div>
+      <div class="stat">Profit / ROI<b id="roi">฿0</b></div>
+      <div class="stat">Lucky Temple<b id="temple">Wat Saman</b></div>
+    </div>
+
+    <div class="footer-ad" id="adsense">
+      <!-- AdSense placeholder: Team B Montphu Factory -->
+      <div style="font-weight:800;letter-spacing:1px">AD • สนับสนุนเรา</div>
+      <div>Thai Lottery lucky oil, amulets? Your ad here.</div>
+      <div style="margin-top:6px;font-size:10px">Google AdSense: ca-pub-XXXXXXXXXXXXXXXX</div>
+    </div>
+
+    <div class="support">
+      <a href="https://paypal.me/phuonlinenew" target="_blank">💛 PayPal: phuonline...</a>
+      <a>📱 PromptPay: 0811113693</a>
+      <a id="shareBtn">Share Luck</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="popup" id="popup">
+  <div class="popup-card" id="popupCard">
+    <div style="font-size:42px" id="popEmoji">💸</div>
+    <h2 id="popTitle">You Win!</h2>
+    <p id="popDesc">You matched last 2 digits!</p>
+    <button class="btn btn-primary" id="popBtn">ขูดต่อ Next Ticket →</button>
+    <div style="margin-top:10px"><button class="btn btn-ghost" style="width:100%" onclick="document.getElementById('popup').classList.remove('open')">Close</button></div>
+  </div>
+</div>
+
+<script>
+/* Single-file Thai Lottery Scratch Simulator — Team B Gambling Style */
+const $=s=>document.querySelector(s);
+const tiers=[
+ {id:'low', name:'ตลาดนัด Market', price:40, maxWin:2000, two:45, three:18, topRate:0.004, color:'#8BC34A', label:'90% LOSE'},
+ {id:'mid', name:'วัดดัง Temple', price:80, maxWin:10000, two:55, three:22, topRate:0.006, color:'#FF9800', hot:true},
+ {id:'high', name:'NAGA GOLD นาคาทอง', price:200, maxWin:50000, two:65, three:28, topRate:0.01, color:'#FFD700', badge:'MEGA'}
+];
+let state={
+ bal:1000, tickets:0, wins:0, big:0, spent:0, wonTotal:0,
+ tier:tiers[1],
+ your:'', draw:'', prize:0, prizeLabel:'', revealed:false, scratchPct:0, gameOver:false
+};
+const temples=['Wat Saman','Wat Kham Chanod','Wat Phra Kaew','Mae Nak Shrine','Wat Rai Khing','Naga Cave','Aiyara Ganesha'];
+const luckyMantras=['เลขมงคล 9','รวยๆ เฮงๆ','สาธุ99','นาคาให้โชค','ปู่อือลือ'];
+
+function fmt(n){return '฿ '+n.toLocaleString();}
+function randDigits(n){let s='';for(let i=0;i<n;i++)s+=Math.floor(Math.random()*10);return s;}
+function toast(msg,ms=2200){const t=$('#toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),ms);}
+
+function renderTiers(){
+ const html=tiers.map(t=>{
+  const active=state.tier.id===t.id;
+  return `<div class="tier ${active?'active':''}" data-id="${t.id}">${t.badge?`<div class="badge">${t.badge}</div>`: t.hot?`<div class="badge">นิยม HOT</div>` : ''}
+  <b>${t.name}</b><div class="price">฿${t.price}</div><div class="winmax">Win up to ${fmt(t.maxWin)}</div><div class="odds">${t.label||'Risk/Reward'} • 10% WIN</div></div>`;
+ }).join('');
+ $('#tierRail').innerHTML=html;
+ document.querySelectorAll('.tier').forEach(el=>el.addEventListener('click',()=>{
+  state.tier=tiers.find(x=>x.id===el.dataset.id);
+  renderTiers();
+  $('#buyBtn').textContent=`Buy Ticket ${fmt(state.tier.price)} // ซื้อสลาก`;
+  toast(`Switched to ${state.tier.name} ✨`);
+ }));
+}
+function pickOutcome(){
+ const r=Math.random();
+ const t=state.tier;
+ // 90% lose
+ if(r>0.11){return {win:0, label:'เฉียดแล้ว! เกือบถูกรางวัล 😭', emoji:'😭'};}
+ // 10% win bucket
+ const r2=Math.random();
+ if(r2<0.6){ // 60% of wins = last 2 digits
+  const amt=t.two + Math.floor(Math.random()* (t.three));
+  return {win:amt, label:`ถูกเลขท้าย 2 ตัว! Last 2 match 🎉`, emoji:'🎉'};
+ }
+ if(r2<0.88){ // 28% = last 3 digits
+  const amt=t.price*5 + Math.floor(Math.random()*t.price*3);
+  return {win:amt, label:`ถูกเลขท้าย 3 ตัว! Last 3 digits!`, emoji:'✨'};
+ }
+ if(r2<0.97){ // 9% = bigger
+  const amt=Math.floor(t.maxWin*0.15 + Math.random()*t.maxWin*0.2);
+  return {win:amt, label:`ถูกรางวัลที่ 5! 5th Prize! สาธุ!`, emoji:'🙏'};
+ }
+ // 3% jackpot slice
+ const amt=Math.floor(t.maxWin*0.6 + Math.random()*t.maxWin*0.4);
+ return {win:amt, label:`JACKPOT! ถูกรางวัลที่ 1 ใกล้เคียง! นาคาทอง!`, emoji:'🐍💰'};
+}
+
+function newGameFromBuy(){
+ if(state.bal < state.tier.price){
+  toast('เงินหมด! Balance low — เติมดวง? Add more luck',3000);
+  // allow continue in debt? give free spin once
+  if(state.tickets>3 && Math.random()<0.3){ state.bal+=200; toast('ทำบุญได้โชค! Temple blessed +฿200 🙏'); updateHUD(); return newGameFromBuy(); }
+  return;
+ }
+ state.bal-=state.tier.price; state.spent+=state.tier.price; state.tickets++;
+ state.your=randDigits(6);
+ // generate draw to match outcome logic visually
+ const outcome=pickOutcome();
+ state.prize=outcome.win;
+ state.prizeLabel=outcome.label;
+ state.popEmoji=outcome.emoji;
+ // if win, make numbers match accordingly
+ if(outcome.win>0){
+  if(outcome.label.includes('2 ตัว')){
+   state.draw= state.your.slice(0,4)+ state.your.slice(4); // ensure last 2 same — actually we keep last 2 same
+   state.draw= randDigits(4)+ state.your.slice(4);
+  } else if(outcome.label.includes('3 ตัว')){
+   state.draw= randDigits(3)+ state.your.slice(3);
+  } else {
+   state.draw= state.your; // for visual jackpot
+   if(Math.random()<0.5) state.draw= state.your.slice(0,5)+ randDigits(1); // close
+  }
+ } else {
+  // lose: ensure not matching last2
+  let d;
+  do{ d=randDigits(6);}while(d.slice(-2)===state.your.slice(-2));
+  state.draw=d;
+ }
+ state.revealed=false; state.scratchPct=0;
+ updateTicketVisual(true);
+ updateHUD();
+ resetScratchCanvas();
+ $('#temple').textContent=temples[Math.floor(Math.random()*temples.length)];
+ const mantra=luckyMantras[Math.floor(Math.random()*luckyMantras.length)];
+ toast(`เลขเด็ด: ${state.your} • ${mantra}`,2500);
+}
+
+function updateTicketVisual(isNew){
+ $('#yourNum').textContent=state.your||'------';
+ $('#winNum').textContent= state.revealed ? state.draw : '??????';
+ $('#revealNum').textContent= state.revealed ? state.draw : '??????';
+ if(!state.revealed){
+  $('#revealPrize').textContent=`Scratch to reveal • ${luckyMantras[0]} • ${state.tier.name}`;
+  $('#revealPrize').className='prize';
+ }else{
+  if(state.prize>0){
+   $('#revealPrize').textContent=`${state.prizeLabel} → ${fmt(state.prize)}`;
+   $('#revealPrize').style.color='#0a7a00';
+   $('#revealPrize').style.fontWeight='900';
+  }else{
+   $('#revealPrize').textContent=state.prizeLabel;
+   $('#revealPrize').style.color='#7a0000';
+  }
+ }
+}
+
+function updateHUD(){
+ $('#bal').textContent=fmt(state.bal);
+ $('#tix').textContent=`${state.tickets} tickets`;
+ $('#winCnt').textContent=state.wins;
+ $('#bigWin').textContent=fmt(state.big);
+ $('#roi').textContent=(state.wonTotal-state.spent>=0?'+':'')+fmt(state.wonTotal-state.spent);
+ const meter=$('#luckMeter');meter.innerHTML='';for(let i=0;i<8;i++){const s=document.createElement('span');if(i<state.wins%8) s.className='on'; meter.appendChild(s);}
+ const buy=$('#buyBtn');buy.textContent=`Buy Ticket ${fmt(state.tier.price)} // ซื้อ`;
+ buy.disabled= state.bal<0 && state.bal < state.tier.price*0.5;
+}
+
+function reveal(){
+ if(state.revealed) return;
+ state.revealed=true;
+ $('#prog').style.width='100%';
+ updateTicketVisual(false);
+ if(state.prize>0){
+  state.bal+=state.prize; state.wonTotal+=state.prize; state.wins++; state.big=Math.max(state.big,state.prize);
+  confettiPop();
+  showPopup(true);
+ }else{
+  // small suspense
+  if(state.tickets%7===0 && Math.random()<0.5){ toast('ดวงใกล้มาแล้ว... Almost! Try again',2000); }
+  showPopup(false);
+ }
+ updateHUD();
+}
+
+function showPopup(isWin){
+ const pop=$('#popup'); const title=$('#popTitle'); const desc=$('#popDesc'); const emoji=$('#popEmoji');
+ if(isWin){
+  title.textContent=`WIN ${fmt(state.prize)}!`;
+  desc.textContent=`${state.prizeLabel} Your: ${state.your} Draw: ${state.draw} | ${state.tier.name} 🎰`;
+  emoji.textContent=state.popEmoji||'💰';
+ }else{
+  title.textContent=`พลาด! Miss`;
+  desc.textContent=`Your ${state.your} vs Draw ${state.draw}. ${state.prizeLabel} — 90% lose is real Thai lottery style 😅`;
+  emoji.textContent='🙏';
+ }
+ pop.classList.add('open');
+}
+
+function confettiPop(){
+ // simple emoji confetti via interval creating divs
+ const wrap=document.createElement('div');wrap.className='confetti'; document.body.appendChild(wrap);
+ const emojis=['💰','💵','🎉','🪙','✨','🐍']; let n=0;
+ const iv=setInterval(()=>{if(n++>18){clearInterval(iv);wrap.remove();return;} const sp=document.createElement('div');sp.textContent=emojis[n%emojis.length];sp.style.position='absolute';sp.style.left=Math.random()*100+'%';sp.style.top='-10px';sp.style.fontSize= (16+Math.random()*18)+'px';sp.style.animation=`fall ${1+Math.random()*1.2}s linear`; wrap.appendChild(sp); const anim=sp.animate([{transform:`translateY(0) rotate(0deg)`,opacity:1},{transform:`translateY(${window.innerHeight}px) rotate(${360+Math.random()*720}deg)`,opacity:0}],{duration:1200+Math.random()*800,easing:'cubic-bezier(.2,.8,.2,1)'}); anim.onfinish=()=>sp.remove();},80);
+}
+const style2=document.createElement('style'); style2.textContent='@keyframes fall{to{transform:translateY(100vh) rotate(720deg);opacity:0}}'; document.head.appendChild(style2);
+
+/* Scratch canvas logic */
+let isScratching=false; let lastX=0,lastY=0; let scratchedPixels=0; let totalPixels=0;
+function resetScratchCanvas(){
+ const canvas=$('#scratch'); const ctx=canvas.getContext('2d'); const w=canvas.width,h=canvas.height;
+ ctx.globalCompositeOperation='source-over';
+ // gold scratch layer
+ const g=ctx.createLinearGradient(0,0,w,h);
+ g.addColorStop(0,'#a67c00'); g.addColorStop(0.2,'#ffdf7a'); g.addColorStop(0.5,'#c99700'); g.addColorStop(1,'#7a5a00');
+ ctx.fillStyle=g; ctx.fillRect(0,0,w,h);
+ // texture lines
+ ctx.fillStyle='rgba(0,0,0,0.12)';
+ for(let i=0;i<w;i+=12){ctx.fillRect(i,0,1,h);}
+ // text on scratch
+ ctx.fillStyle='rgba(0,0,0,0.55)'; ctx.font='900 24px system-ui'; ctx.textAlign='center';
+ ctx.fillText('ขูดที่นี่ SCRATCH',w/2,h/2-10);
+ ctx.font='700 13px system-ui'; ctx.fillText('เหรียญ ลากนิ้ว / Drag coin  🪙',w/2,h/2+16);
+ // prepare for erase
+ ctx.globalCompositeOperation='destination-out';
+ totalPixels=w*h; scratchedPixels=0; $('#prog').style.width='0%';
+}
+
+function getPos(e){
+ const c=$('#scratch'); const rect=c.getBoundingClientRect();
+ const src=e.touches?e.touches[0]:e;
+ return {x:(src.clientX-rect.left)/rect.width*c.width, y:(src.clientY-rect.top)/rect.height*c.height};
+}
+function scratch(e){
+ if(!isScratching||state.revealed) return;
+ e.preventDefault();
+ const pos=getPos(e); const ctx=$('#scratch').getContext('2d');
+ ctx.beginPath(); ctx.lineWidth=48; ctx.lineCap='round'; ctx.lineJoin='round';
+ ctx.moveTo(lastX,lastY); ctx.lineTo(pos.x,pos.y); ctx.stroke();
+ // also dot
+ ctx.beginPath(); ctx.arc(pos.x,pos.y,24,0,Math.PI*2); ctx.fill();
+ lastX=pos.x; lastY=pos.y;
+ // estimate % scratched via sampling every ~12 frames
+ if(Math.random()<0.12){
+  const img=ctx.getImageData(0,0,300,187).data; // downsample check 1/4
+  let transparent=0; for(let i=3;i<img.length;i+=16){ if(img[i]===0) transparent++; }
+  const pct=Math.min(100, Math.floor((transparent/(img.length/16/4))*100*2.2));
+  state.scratchPct=pct; $('#prog').style.width=pct+'%';
+  if(pct>78) reveal();
+ }
+}
+
+function attachScratch(){
+ const canvas=$('#scratch');
+ const start=(e)=>{isScratching=true; const p=getPos(e); lastX=p.x; lastY=p.y; scratch(e);};
+ const end=()=>{isScratching=false; if(state.scratchPct>35 && state.scratchPct<78){ /* hint */ }};
+ canvas.addEventListener('mousedown', start); window.addEventListener('mousemove', scratch); window.addEventListener('mouseup', end);
+ canvas.addEventListener('touchstart', start,{passive:false}); window.addEventListener('touchmove', scratch,{passive:false}); window.addEventListener('touchend', end);
+}
+
+function quickScratch(){ // auto reveal 100%
+ if(state.tickets===0) return newGameFromBuy();
+ if(!state.revealed){state.scratchPct=100; reveal();}
+ else{ newGameFromBuy();}
+}
+
+// init
+renderTiers(); updateHUD(); resetScratchCanvas(); attachScratch();
+$('#buyBtn').addEventListener('click',()=>{ if(state.revealed||state.tickets===0) newGameFromBuy(); else { state.scratchPct=100; reveal(); }});
+$('#autoBtn').addEventListener('click', quickScratch);
+$('#popBtn').addEventListener('click', ()=>{ $('#popup').classList.remove('open'); newGameFromBuy(); });
+$('#shareBtn').addEventListener('click',()=>{ const txt=`I scratched Thai lottery ${state.your} → ${state.draw} ${state.prize? 'WIN '+fmt(state.prize)+'!':'LOSE but fun'} 🐍 ล็อตเตอรี่ไทย`; if(navigator.share) navigator.share({title:'Lottery Scratch Thai',text:txt}); else {navigator.clipboard.writeText(txt); toast('Copied lucky result! สาธุ') }});
+
+// Add donation panel injected
+const donate=document.createElement('div'); donate.innerHTML=`<div style="margin:12px auto;max-width:360px;background:#1a1a26;border:1px solid #2c2c3f;border-radius:14px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center"><div style="font-size:11px;opacity:.8">Support Team B<br><span style="font-weight:900;font-size:12px">PayPal: phuonlinenew@gmail.com • PromptPay 0811113693</span></div><a href="https://paypal.me/phuonlinenew" target="_blank" style="background:#FFD700;color:#000;padding:8px 12px;border-radius:999px;text-decoration:none;font-weight:900;font-size:12px">Donate</a></div>`; document.querySelector('.board').appendChild(donate);
+
+// Start with 1 ticket auto
+newGameFromBuy();
+</script>
+</body>
+</html>

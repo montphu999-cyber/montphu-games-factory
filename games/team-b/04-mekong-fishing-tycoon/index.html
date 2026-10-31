@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Mekong Fishing Tycoon - Giant Catfish Hunt!</title>
+<style>
+:root{--bg:#061a14;--river:#0fa3b1;--river2:#0a4853;--gold:#ffcc33;--accent:#ff3b30;--paper:#fefbe9;}
+*{box-sizing:border-box;margin:0;padding:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,sans-serif;touch-action:manipulation}
+body{background:radial-gradient(120% 80% at 50% 0%,#143d2e 0%,#061a14 70%);color:var(--paper);overflow:hidden;height:100dvh;display:flex;flex-direction:column}
+header{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:#00000066;border-bottom:2px solid #ffffff1a;backdrop-filter:blur(8px)}
+h1{font-size:15px;letter-spacing:1px;font-weight:900;text-transform:uppercase;color:var(--gold)}
+h1 span{color:#fff;font-weight:400;font-size:11px;letter-spacing:0}
+.stats{display:flex;gap:8px}
+.stat{background:#ffffff14;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;border:1px solid #ffffff22}
+#main{flex:1;display:grid;grid-template-columns:1fr 300px;overflow:hidden}
+@media(max-width:820px){#main{grid-template-columns:1fr;grid-template-rows:1fr auto}#side{order:2;max-height:38dvh} #riverWrap{order:1}}
+#riverWrap{position:relative;overflow:hidden;background:linear-gradient(180deg,#b4e6ff 0%,#0fa3b1 18%,#084a56 55%,#052a30 100%)}
+.wave{position:absolute;inset:0;opacity:.25;background:repeating-linear-gradient(100deg,transparent 0 18px,rgba(255,255,255,.7) 18px 20px);animation:drift 3s linear infinite}
+@keyframes drift{0%{transform:translateX(0)}100%{transform:translateX(-40px)}}
+#boat{position:absolute;left:50%;top:58%;transform:translate(-50%,-50%);width:140px;height:64px;background:linear-gradient(#8b5a2b,#5a3415);border-radius:18px 18px 6px 6px;box-shadow:0 12px 0 #00000055,0 0 0 3px #000;z-index:3}
+#boat::after{content:'เรือ หาปลา';position:absolute;top:-18px;left:50%;transform:translateX(-50%);background:#000;color:var(--gold);font-size:10px;padding:2px 6px;border-radius:4px;white-space:nowrap;font-weight:900}
+#rod{position:absolute;left:50%;top:40%;width:3px;height:120px;background:#222;transform-origin:bottom center;transform:translateX(-50%) rotate(-25deg);transition:.25s;z-index:4}
+#line{position:absolute;left:50%;top:calc(40% + 10px);width:2px;background:rgba(255,255,255,.9);transform-origin:top;z-index:2}
+#float{position:absolute;width:14px;height:22px;background:linear-gradient(#ff3b30 50%,#fff 50%);border:2px solid #000;border-radius:50%/60%;z-index:5;display:none}
+#fishShadow{position:absolute;width:56px;height:22px;background:rgba(0,0,0,.35);border-radius:50%;filter:blur(1px);display:none;z-index:1}
+#splash{position:absolute;font-size:28px;display:none;z-index:6;pointer-events:none}
+.biteAnim{animation:bite .18s alternate 6}
+@keyframes bite{0%{transform:translateY(0)}100%{transform:translateY(8px)}}
+#centerHUD{position:absolute;left:50%;top:10%;transform:translateX(-50%);z-index:10;display:flex;flex-direction:column;align-items:center;gap:8px;width:92%;max-width:420px}
+.panel{background:rgba(0,0,0,.68);border:1px solid #ffffff2a;border-radius:14px;padding:10px 14px;backdrop-filter:blur(10px);width:100%;text-align:center}
+#castBtn{width:100%;padding:14px;font-size:18px;font-weight:900;letter-spacing:.5px;text-transform:uppercase;border:0;border-radius:12px;background:linear-gradient(#ffcc33,#ff9500);color:#000;box-shadow:0 6px 0 #b46a00,0 0 0 3px #000;cursor:pointer}
+#castBtn:active{transform:translateY(4px);box-shadow:0 2px 0 #b46a00,0 0 0 3px #000}
+#miniGame{display:none}
+.barWrap{height:26px;background:#000;border-radius:999px;overflow:hidden;border:2px solid #fff;position:relative;margin:8px 0}
+#moving{position:absolute;top:0;bottom:0;width:18px;background:var(--accent);left:0;transition:left .02s linear}
+#targetZone{position:absolute;top:0;bottom:0;background:#2ecc40;opacity:.9}
+#tension{height:10px;background:#333;border-radius:999px;overflow:hidden;margin-top:6px}
+#tensionFill{height:100%;width:0%;background:linear-gradient(90deg,#2ecc40,#ffcc33,#ff3b30);transition:.08s}
+#side{background:linear-gradient(180deg,#101a16,#0a1310);border-left:2px solid #ffffff15;padding:8px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.tabRow{display:flex;gap:6px}
+.tab{flex:1;padding:7px;font-size:11px;font-weight:900;border-radius:8px;border:1px solid #ffffff22;background:#ffffff10;cursor:pointer;text-transform:uppercase;color:#fff}
+.tab.active{background:var(--gold);color:#000;border-color:#000}
+.card{background:#ffffff0f;border:1px solid #ffffff18;border-radius:10px;padding:8px;display:flex;justify-content:space-between;align-items:center}
+.card b{font-size:12px}
+.card span{font-size:11px;opacity:.7}
+.btnSmall{padding:6px 10px;border-radius:8px;border:0;background:#fff;color:#000;font-weight:900;font-size:11px;cursor:pointer}
+.btnSmall:disabled{opacity:.35}
+.fishLog{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:10px;padding:3px 6px;border-radius:999px;background:#ffffff14;border:1px solid #ffffff22}
+#marketTotal{font-size:22px;font-weight:900;color:var(--gold)}
+#toast{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);background:#000;color:#fff;padding:8px 14px;border-radius:999px;font-weight:800;font-size:13px;z-index:20;display:none;border:2px solid var(--gold)}
+footer{padding:6px 10px;background:#000000a0;display:flex;justify-content:space-between;align-items:center;font-size:10px;border-top:1px solid #ffffff15}
+footer a{color:var(--gold);text-decoration:none;font-weight:700}
+.ads{width:100%;min-height:50px;background:repeating-linear-gradient(45deg,#222,#222 10px,#2a2a2a 10px,#2a2a2a 20px);border:1px dashed #666;display:flex;align-items:center;justify-content:center;color:#999;font-size:10px;letter-spacing:1px;margin-top:6px}
+</style>
+</head>
+<body>
+<header>
+<h1>🎣 Mekong Fishing Tycoon <span>• Pla Buek Hunt • โขง</span></h1>
+<div class="stats">
+<div class="stat">💰 ฿<span id="money">250</span></div>
+<div class="stat">⭐ LV <span id="lvl">1</span></div>
+<div class="stat">🐟 <span id="caughtCount">0</span></div>
+</div>
+</header>
+<div id="main">
+<div id="riverWrap">
+<div class="wave"></div>
+<div id="fishShadow"></div>
+<div id="boat"></div>
+<div id="rod"></div>
+<div id="line"></div>
+<div id="float"></div>
+<div id="splash">💦</div>
+<div id="centerHUD">
+<div class="panel" id="statusPanel">
+<div id="statusText" style="font-weight:900;font-size:14px;letter-spacing:.3px">RIVER IS ANGRY TODAY - READY TO HUNT? ไปเลย!</div>
+<div style="font-size:11px;opacity:.75;margin-top:4px">Mekong River - Nong Khai • น้ำเชี่ยว มาก!</div>
+<button id="castBtn">CAST LINE — เหวี่ยงเบ็ด!</button>
+<div id="waitBar" style="display:none;margin-top:8px">
+<div style="font-size:11px">Waiting for bite... <span id="waitDots"></span></div>
+<div class="barWrap" style="height:8px"><div id="waitProgress" style="height:100%;width:0%;background:var(--river)"></div></div>
+</div>
+</div>
+<div class="panel" id="miniGame">
+<div style="display:flex;justify-content:space-between;font-size:11px;font-weight:900"><span>⚡ KEEP IN GREEN! TAP / SPACE!</span><span id="timer">5.0s</span></div>
+<div class="barWrap"><div id="targetZone"></div><div id="moving"></div></div>
+<div style="display:flex;justify-content:space-between;font-size:10px"><span>Tension</span><span id="tensionTxt">0%</span></div>
+<div id="tension"><div id="tensionFill"></div></div>
+<div style="font-size:11px;margin-top:6px" id="fishNameDisplay">Giant Fish!</div>
+</div>
+<div class="panel" id="resultPanel" style="display:none">
+<div id="resultTitle" style="font-size:18px;font-weight:900"></div>
+<div id="resultDesc" style="font-size:12px;margin-top:4px"></div>
+<button id="collectBtn" class="btnSmall" style="margin-top:8px;width:100%;padding:10px;font-size:14px;background:var(--gold)">KEEP & CONTINUE</button>
+</div>
+</div>
+<div id="toast"></div>
+</div>
+<div id="side">
+<div class="tabRow">
+<button class="tab active" data-tab="inv">Bucket 🪣</button>
+<button class="tab" data-tab="shop">Upgrade 🔧</button>
+<button class="tab" data-tab="market">Market 🛒</button>
+</div>
+<div id="tab-inv">
+<div style="font-size:11px;font-weight:800;opacity:.7;margin-bottom:4px">LIVE BUCKET - สดๆ</div>
+<div id="bucketList" style="display:flex;flex-direction:column;gap:6px"></div>
+<div class="fishLog" id="rarityLog" style="margin-top:6px"></div>
+</div>
+<div id="tab-shop" style="display:none">
+<div id="shopList" style="display:flex;flex-direction:column;gap:6px"></div>
+<div style="font-size:10px;opacity:.6;margin-top:6px">Thai Wisdom: Better rod = bigger Pla Buek. เรือดี มีชัย ไปกว่าครึ่ง</div>
+</div>
+<div id="tab-market" style="display:none">
+<div class="panel" style="background:#fefbe922">
+<div style="font-size:12px;font-weight:900">Floating Market - ตลาดน้ำ</div>
+<div style="font-size:11px;opacity:.8;margin:4px 0">Sell all fish now? Price x <span id="marketMult">1.0</span> (random Isaan demand!)</div>
+<div id="marketTotal">฿0</div>
+<button id="sellBtn" class="btnSmall" style="width:100%;margin-top:6px;background:linear-gradient(#ffcc33,#ff9500);padding:10px;font-size:13px">SELL ALL - ขายเลย!</button>
+<div id="marketLog" style="font-size:10px;margin-top:6px;opacity:.7"></div>
+</div>
+<div class="ads">AdSense - Mekong Fishing Gear</div>
+</div>
+<div class="ads">AdSense - Sponsored</div>
+<div style="margin-top:auto;padding-top:8px;border-top:1px solid #ffffff15">
+<div style="font-size:10px;font-weight:800;letter-spacing:.5px;opacity:.6">SUPPORT MONT PHU FACTORY</div>
+<div style="display:flex;gap:6px;margin-top:4px;flex-wrap:wrap">
+<a href="https://www.paypal.com/paypalme/phuonlinenew" target="_blank" style="background:#0070ba;color:#fff;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900;text-decoration:none">PayPal: phuonlinenew@gmail.com</a>
+<span style="background:#1a5aff;color:#fff;padding:4px 8px;border-radius:6px;font-size:10px;font-weight:900">PromptPay: 0811113693</span>
+</div>
+</div>
+</div>
+</div>
+<footer>
+<span>Montphu Team B • Game 04 • Made in Isaan 🇹🇭 • <span id="best">Best: ฿0</span></span>
+<span><button onclick="resetGame()" style="background:0;border:0;color:#fff;font-size:10px;text-decoration:underline;cursor:pointer">Restart</button> | Score: ฿<span id="scoreFoot">0</span></span>
+</footer>
+<script>
+let money=250, lvl=1, caught=0, totalScore=0, best=Number(localStorage.getItem('mekongBest')||0);
+let state='idle'; // idle, casting, waiting, fighting
+let bucket=[];
+let upgrades={
+  rod:{lv:1,cost:180,power:1, name:'Bamboo Rod ไม้ไผ่'},
+  line:{lv:1,cost:150,power:1, name:'Line ลวดเอ็น'},
+  boat:{lv:1,cost:300,power:1, name:'Ruea หางยาว'}
+};
+const fishDB=[
+{id:'pla_sroi',name:'Pla Sroi',th:'ปลาสร้อย',min:0.5,max:1.2,price:22,rarity:1,color:'#b0e0e6',fight:3.5},
+{id:'pla_khao',name:'Striped Catfish',th:'ปลาสวาย',min:1,max:3,price:45,rarity:1,color:'#c2c2c2',fight:4.5},
+{id:'pla_chon',name:'Snakehead',th:'ปลาช่อน',min:1.5,max:4,price:85,rarity:2,color:'#6b8e23',fight:5.5},
+{id:'pla_kot',name:'Mekong Catfish',th:'ปลากด',min:3,max:8,price:160,rarity:2,color:'#d2b48c',fight:6.2},
+{id:'pla_buek_small',name:'Young Pla Buek',th:'ปลาบึกน้อย',min:8,max:20,price:420,rarity:3,color:'#708090',fight:7.5},
+{id:'pla_buek',name:'GIANT PLA BUEK',th:'ปลาบึกยักษ์',min:25,max:80,price:1200,rarity:4,color:'#ff2a2a',fight:9.5},
+{id:'dragon',name:'Mekong Naga',th:'พญานาค',min:100,max:250,price:5000,rarity:5,color:'#00ffcc',fight:11}
+];
+let curFish=null, curSize=0, tension=0, inGreen=false, timeLeft=0, moveDir=1, movePos=0, targetL=35, targetR=65, loopId=null, biteTimer=null;
+const $=s=>document.getElementById(s);
+function showToast(t){$('toast').textContent=t;$('toast').style.display='block';setTimeout(()=>$('toast').style.display='none',2200)}
+function weightedPick(){
+ let luck = upgrades.rod.power*0.35 + upgrades.boat.power*0.25 + lvl*0.1 + (Math.random()*0.5);
+ // 0-~4 range maps to rarity
+ let roll = Math.random()* (6- luck);
+ if(roll<0.4) return fishDB[6];
+ if(roll<0.9) return fishDB[5];
+ if(roll<1.7) return fishDB[4];
+ if(roll<2.6) return fishDB[3];
+ if(roll<3.6) return fishDB[2];
+ if(roll<4.8) return fishDB[1];
+ return fishDB[0];
+}
+function renderSide(){
+ $('money').textContent=money|0;
+ $('lvl').textContent=lvl;
+ $('caughtCount').textContent=caught;
+ $('scoreFoot').textContent=totalScore|0;
+ $('best').textContent='Best: ฿'+best;
+ // bucket
+ let html='';
+ let total=0;
+ bucket.forEach((f,i)=>{
+   total+=f.value;
+   html+=`<div class="card"><div><b>${f.icon} ${f.name}</b> <span style="color:${f.color}">●</span><br><span>${f.th} • ${f.size.toFixed(1)}kg • ฿${f.value}</span></div><button class="btnSmall" onclick="discard(${i})">X</button></div>`
+ });
+ if(!html) html='<div style="font-size:11px;opacity:.5;padding:12px;text-align:center">Bucket empty - ไปหาปลา!</div>';
+ $('bucketList').innerHTML=html;
+ $('marketTotal').textContent='฿'+total;
+ $('marketMult').textContent=(0.8+Math.random()*0.7).toFixed(1);
+ // shop
+ let shtml='';
+ Object.keys(upgrades).forEach(k=>{
+   let u=upgrades[k];
+   let nextCost=Math.floor(u.cost*Math.pow(1.65,u.lv));
+   shtml+=`<div class="card"><div><b>${u.name} Lv ${u.lv}</b><br><span>Power ${u.power.toFixed(1)} → ${(u.power+0.5).toFixed(1)}</span></div><button class="btnSmall" ${money<nextCost?'disabled':''} onclick="buyUpg('${k}')">฿${nextCost}</button></div>`;
+ });
+ $('shopList').innerHTML=shtml;
+}
+function buyUpg(k){
+ let u=upgrades[k];
+ let c=Math.floor(u.cost*Math.pow(1.65,u.lv));
+ if(money<c) return;
+ money-=c; u.lv++; u.power+=0.5; if(k=='boat'&&u.lv%3==0){lvl++; showToast('LEVEL UP! เรือแรงขึ้น! Lv '+lvl)}
+ renderSide(); showToast('Upgraded '+u.name+'!')
+}
+window.buyUpg=buyUpg;
+window.discard=(i)=>{bucket.splice(i,1); renderSide();}
+function startCast(){
+ if(state!=='idle') return;
+ state='casting';
+ $('statusText').textContent='Casting... เหวี่ยง!';
+ $('rod').style.transform='translateX(-50%) rotate(55deg)';
+ setTimeout(()=>{$('rod').style.transform='translateX(-50%) rotate(-35deg)';},180);
+ setTimeout(()=>{
+   state='waiting';
+   $('castBtn').style.display='none';
+   $('waitBar').style.display='block';
+   $('float').style.display='block';
+   let rx= 20+Math.random()*60;
+   $('float').style.left=rx+'%'; $('float').style.top=(42+Math.random()*28)+'%';
+   $('line').style.display='block'; positionLine();
+   $('statusText').textContent='Waiting... ปลากำลังมา';
+   let wait= 1200+ Math.random()*3200 / Math.max(0.5,upgrades.boat.power*0.3+upgrades.line.power*0.2);
+   let prog=0; let iv=setInterval(()=>{prog+=4; $('waitProgress').style.width=prog+'%'; $('waitDots').textContent='.'.repeat((prog/25|0)%4); positionLine(); if(prog>=100) clearInterval(iv)},50);
+   biteTimer=setTimeout(()=>{clearInterval(iv); bite()}, wait);
+ },400);
+}
+function positionLine(){
+ let b=$('boat').getBoundingClientRect(); let f=$('float').getBoundingClientRect(); let p=$('riverWrap').getBoundingClientRect();
+ let bx=b.left+b.width/2 - p.left, by=b.top+ b.height*0.2 - p.top;
+ let fx=f.left+f.width/2 - p.left, fy=f.top - p.top;
+ let dx=fx-bx, dy=fy-by, len=Math.hypot(dx,dy), ang=Math.atan2(dy,dx)*180/Math.PI+90;
+ $('line').style.left=bx+'px'; $('line').style.top=by+'px'; $('line').style.height=len+'px'; $('line').style.transform=`rotate(${ang}deg)`; $('line').style.transformOrigin='top';
+}
+function bite(){
+ if(state!=='waiting') return;
+ curFish=weightedPick(); curSize=curFish.min + Math.random()*(curFish.max-curFish.min);
+ $('float').classList.add('biteAnim'); $('splash').style.display='block'; $('splash').style.left=$('float').style.left; $('splash').style.top=$('float').style.top;
+ $('statusText').textContent='!!! BITE !!! ตอดแล้ว - TAP NOW!';
+ $('castBtn').style.display='block'; $('castBtn').textContent='HOOK! งัดเลย! (SPACE)';
+ $('waitBar').style.display='none';
+ let hookTimeout=setTimeout(()=>{miss()},1800);
+ $('castBtn').onclick=()=>{clearTimeout(hookTimeout);hook();};
+}
+function miss(){
+ $('float').classList.remove('biteAnim'); $('splash').style.display='none';
+ state='idle'; $('statusText').textContent='Escaped... หลุด! Try again เร็ว!'; $('castBtn').textContent='CAST LINE — เหวี่ยงเบ็ด!'; $('castBtn').onclick=startCast; $('float').style.display='none'; $('line').style.display='none'; showToast('Fish escaped! แย่จัง');
+}
+function hook(){
+ state='fighting';
+ $('float').classList.remove('biteAnim'); $('splash').style.display='none';
+ $('statusPanel').style.display='none';
+ $('miniGame').style.display='block';
+ $('fishNameDisplay').textContent=`${curFish.name} - ${curFish.th} - ${curSize.toFixed(1)}kg ${curFish.rarity>=4?'🔥 GIANT!':''}`;
+ $('fishNameDisplay').style.color=curFish.color;
+ // setup minigame
+ tension=10; inGreen=false; timeLeft=curFish.fight; targetL=20+Math.random()*30; targetR=targetL+ (22 - curFish.rarity*2.2); // smaller for rare
+ $('targetZone').style.left=targetL+'%'; $('targetZone').style.width=(targetR-targetL)+'%';
+ movePos=5; moveDir=1 + curFish.rarity*0.6; // speed
+ loopId=setInterval(gameLoop,16);
+}
+function gameLoop(){
+ timeLeft-=0.016; $('timer').textContent=timeLeft.toFixed(1)+'s';
+ movePos+=moveDir * (0.8 + upgrades.rod.power*0.05); if(movePos>95||movePos<0){moveDir*=-1; movePos=Math.max(0,Math.min(95,movePos))}
+ $('moving').style.left=movePos+'%';
+ inGreen = movePos>=targetL && movePos<=targetR;
+ // tension logic: need to hold in green
+ if(inGreen){tension+= (0.9 + upgrades.line.power*0.15) * (holding?1:0.4); $('moving').style.background='#00e676'; targetL+= (Math.random()-0.5)*0.15; targetR+= (Math.random()-0.5)*0.15;}
+ else {tension-=1.1; $('moving').style.background='var(--accent)';}
+ tension=Math.max(0,Math.min(100,tension));
+ $('tensionFill').style.width=tension+'%'; $('tensionTxt').textContent=tension.toFixed(0)+'%';
+ if(tension>=100){winFight(); return;}
+ if(timeLeft<=0){loseFight(); return;}
+}
+let holding=false;
+function winFight(){
+ clearInterval(loopId); state='idle'; $('miniGame').style.display='none'; $('statusPanel').style.display='block'; $('float').style.display='none'; $('line').style.display='none';
+ let mult=0.9 + curSize/curFish.max*0.8 + curFish.rarity*0.2 + upgrades.rod.power*0.05;
+ let value=Math.floor(curFish.price * mult * (0.8+Math.random()*0.6));
+ let icon = curFish.rarity>=5?'🐉':curFish.rarity>=4?'🦈':curFish.rarity>=3?'🐟':'🐠';
+ let entry={...curFish, size:curSize, value, icon, color:curFish.color};
+ bucket.push(entry); caught++; totalScore+=value;
+ if(bucket.length>9){showToast('Bucket full! ไปขายที่ตลาด!'); }
+ $('resultTitle').textContent= icon+' CAUGHT! '+curFish.name.toUpperCase();
+ $('resultTitle').style.color=curFish.color;
+ $('resultDesc').innerHTML=`<span style="font-weight:900">${curSize.toFixed(1)}kg</span> • ฿${value} • ${curFish.th}<br>${curFish.rarity>=4?'<span style="color:gold">⭐ RARE CATCH! โคตรใหญ่!</span>':'Nice catch! เก่งมาก!'}`;
+ $('resultPanel').style.display='block'; $('castBtn').style.display='none';
+ $('collectBtn').onclick=()=>{$('resultPanel').style.display='none'; $('castBtn').style.display='block'; $('castBtn').textContent='CAST LINE — เหวี่ยงเบ็ด!'; $('castBtn').onclick=startCast; $('statusText').textContent=curFish.rarity>=4?'INCREDIBLE! ยังมีใหญ่กว่านี้!':'Good! Keep hunting! ไปต่อ!'; renderSide();}
+ renderSide(); checkBest();
+}
+function loseFight(){
+ clearInterval(loopId); state='idle'; $('miniGame').style.display='none'; $('statusPanel').style.display='block'; $('float').style.display='none'; $('line').style.display='none';
+ $('resultTitle').textContent='💔 LINE BREAK! ขาด!';
+ $('resultTitle').style.color='#ff3b30';
+ $('resultDesc').textContent=`The ${curFish.name} was too strong! อด upgrade rod!`;
+ $('resultPanel').style.display='block'; $('castBtn').style.display='none';
+ $('collectBtn').onclick=()=>{$('resultPanel').style.display='none'; $('castBtn').style.display='block'; $('castBtn').textContent='CAST LINE — เหวี่ยงเบ็ด!'; $('castBtn').onclick=startCast; $('statusText').textContent='So close! เอาใหม่!';};
+}
+function checkBest(){if(totalScore>best){best=totalScore; localStorage.setItem('mekongBest',best);}}
+window.resetGame=()=>{if(confirm('Reset? เริ่มใหม่?')){localStorage.removeItem('mekongBest'); location.reload();}}
+// inputs
+let marketMult= parseFloat((0.8+Math.random()*0.5).toFixed(1));
+$('sellBtn').onclick=()=>{
+ if(!bucket.length){showToast('No fish! ไม่มีปลา!'); return;}
+ let sum=bucket.reduce((a,b)=>a+b.value,0);
+ let mult= parseFloat($('marketMult').textContent);
+ let earn=Math.floor(sum*mult);
+ money+=earn; totalScore+=earn; lvl+= bucket.some(f=>f.rarity>=4)?1:0;
+ $('marketLog').innerHTML+=`<div>+ ฿${earn} sold ${bucket.length} fish x${mult} - ${new Date().toLocaleTimeString()} ตลาดคึกคัก!</div>`;
+ bucket=[]; renderSide(); checkBest(); showToast(`Sold! ฿${earn} ขายแล้ว!`);
+ marketMult= parseFloat((0.8+Math.random()*0.7).toFixed(1));
+}
+$('castBtn').onclick=startCast;
+document.addEventListener('keydown',e=>{
+ if(e.code==='Space'){
+   e.preventDefault();
+   if(state==='waiting'){clearTimeout(biteTimer);hook();}
+   else if(state==='idle'){startCast();}
+   holding=true;
+ }
+ if(e.code==='KeyS'){ // sell shortcut
+   $('sellBtn').click();
+ }
+});
+document.addEventListener('keyup',e=>{if(e.code==='Space') holding=false;});
+document.addEventListener('pointerdown',()=>{holding=true});
+document.addEventListener('pointerup',()=>{holding=false});
+document.addEventListener('touchstart',()=>{holding=true},{passive:true});
+document.addEventListener('touchend',()=>{holding=false});
+// tabs
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active');
+ document.getElementById('tab-inv').style.display=t.dataset.tab=='inv'?'block':'none';
+ document.getElementById('tab-shop').style.display=t.dataset.tab=='shop'?'block':'none';
+ document.getElementById('tab-market').style.display=t.dataset.tab=='market'?'block':'none';
+});
+renderSide();
+// auto resize line on resize
+window.addEventListener('resize',()=>{if(state==='waiting')positionLine();});
+// init text
+$('best').textContent='Best: ฿'+best;
+</script>
+<!-- PayPal + PromptPay + AdSense -->
+<!-- PayPal: phuonlinenew@gmail.com | PromptPay: 0811113693 -->
+<!-- AdSense placeholder: ca-pub-XXXXXXXXXXXX -->
+<script>/* adsense: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js"></script> */</script>
+</body>
+</html>
